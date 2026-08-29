@@ -1,4 +1,4 @@
-# RobotSim IDE - Cloud Edition
+# ROBOPTIXX - Cloud Edition
 
 A fully refactored cloud-based robot simulator IDE for building, simulating, and programming robots.
 
@@ -126,7 +126,7 @@ Projects are stored in **IndexedDB** (browser storage):
 ## 📝 File Structure
 
 ```
-robotSim/
+ROBOPTIXX/
 ├── index.html              # HTML entry point + loading UI
 ├── main.js                 # App initialization
 ├── cloud-imports.js        # CDN import handler

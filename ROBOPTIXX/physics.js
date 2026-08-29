@@ -24,9 +24,9 @@ export class PhysicsSystem {
       this.world = new this.ammoLib.btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
       this.world.setGravity(new this.ammoLib.btVector3(0, -9.8, 0));
       
-      console.log('[RobotSim] Physics system initialized');
+      console.log('[ROBOPTIXX] Physics system initialized');
     } catch (error) {
-      console.error('[RobotSim] Physics initialization failed:', error);
+      console.error('[ROBOPTIXX] Physics initialization failed:', error);
       throw error;
     }
   }
@@ -58,7 +58,7 @@ export class PhysicsSystem {
       
       return body;
     } catch (error) {
-      console.warn('[RobotSim] Failed to create physics body:', error);
+      console.warn('[ROBOPTIXX] Failed to create physics body:', error);
       return null;
     }
   }
@@ -69,7 +69,7 @@ export class PhysicsSystem {
       this.world.removeRigidBody(body);
       this.bodies.delete(body);
     } catch (error) {
-      console.warn('[RobotSim] Error removing physics body:', error);
+      console.warn('[ROBOPTIXX] Error removing physics body:', error);
     }
   }
 
@@ -107,7 +107,7 @@ export class PhysicsSystem {
         }
       });
     } catch (error) {
-      console.warn('[RobotSim] Physics step error:', error);
+      console.warn('[ROBOPTIXX] Physics step error:', error);
     }
   }
 }

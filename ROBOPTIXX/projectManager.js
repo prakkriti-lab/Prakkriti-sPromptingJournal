@@ -30,10 +30,10 @@ export class ProjectManager {
       const payload = this._serializeProject();
       await saveProject(projectName, payload);
       this.currentProjectName = projectName;
-      console.log(`[RobotSim] Project "${projectName}" saved to IndexedDB`);
+      console.log(`[ROBOPTIXX] Project "${projectName}" saved to IndexedDB`);
       return true;
     } catch (error) {
-      console.error('[RobotSim] Failed to save project:', error);
+      console.error('[ROBOPTIXX] Failed to save project:', error);
       alert('Failed to save project: ' + error.message);
       return false;
     }
@@ -61,10 +61,10 @@ export class ProjectManager {
       this.robot.sensors = data.sensors || [];
       this.currentProjectName = projectName;
       
-      console.log(`[RobotSim] Project "${projectName}" loaded from IndexedDB`);
+      console.log(`[ROBOPTIXX] Project "${projectName}" loaded from IndexedDB`);
       return true;
     } catch (error) {
-      console.error('[RobotSim] Failed to load project:', error);
+      console.error('[ROBOPTIXX] Failed to load project:', error);
       alert('Failed to load project: ' + error.message);
       return false;
     }
@@ -74,7 +74,7 @@ export class ProjectManager {
     try {
       return await listProjects();
     } catch (error) {
-      console.error('[RobotSim] Failed to list projects:', error);
+      console.error('[ROBOPTIXX] Failed to list projects:', error);
       return [];
     }
   }
@@ -125,10 +125,10 @@ export class ProjectManager {
       this.robot.timeline = data.timeline || [];
       this.robot.sensors = data.sensors || [];
       
-      console.log('[RobotSim] Project imported from JSON');
+      console.log('[ROBOPTIXX] Project imported from JSON');
       return true;
     } catch (error) {
-      console.error('[RobotSim] Failed to import project:', error);
+      console.error('[ROBOPTIXX] Failed to import project:', error);
       alert('Failed to import project: ' + error.message);
       return false;
     }

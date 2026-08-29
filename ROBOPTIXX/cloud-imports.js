@@ -13,23 +13,23 @@ const CDN_URLS = {
 
 export async function initCloudEnvironment() {
   try {
-    console.log('[RobotSim] Initializing cloud environment...');
+    console.log('[ROBOPTIXX] Initializing cloud environment...');
     
     // Load Three.js
     THREE = await import(CDN_URLS.THREE).then(m => m.default || m);
     if (!THREE) throw new Error('Failed to load Three.js');
-    console.log('[RobotSim] ✓ Three.js loaded');
+    console.log('[ROBOPTIXX] ✓ Three.js loaded');
 
     // Load Ammo.js WASM
     const AmmoModule = await import(CDN_URLS.AMMO_WASM);
     const AmmoFactory = AmmoModule.default || AmmoModule;
     Ammo = await AmmoFactory();
     if (!Ammo) throw new Error('Failed to initialize Ammo.js');
-    console.log('[RobotSim] ✓ Ammo.js WASM loaded');
+    console.log('[ROBOPTIXX] ✓ Ammo.js WASM loaded');
 
     return { THREE, Ammo };
   } catch (error) {
-    console.error('[RobotSim] Cloud environment initialization failed:', error);
+    console.error('[ROBOPTIXX] Cloud environment initialization failed:', error);
     throw error;
   }
 }
@@ -46,7 +46,7 @@ export async function loadThreeControls() {
       TransformControls: TransformModule.TransformControls || TransformModule.default.TransformControls
     };
   } catch (error) {
-    console.error('[RobotSim] Failed to load Three.js controls:', error);
+    console.error('[ROBOPTIXX] Failed to load Three.js controls:', error);
     throw error;
   }
 }

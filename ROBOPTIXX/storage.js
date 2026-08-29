@@ -14,7 +14,7 @@ export async function initStorage() {
     
     request.onsuccess = () => {
       db = request.result;
-      console.log('[RobotSim] ✓ IndexedDB initialized');
+      console.log('[ROBOPTIXX] ✓ IndexedDB initialized');
       resolve(db);
     };
     
@@ -43,7 +43,7 @@ export async function saveProject(projectName, projectData) {
     const request = store.put(data);
     request.onerror = () => reject(new Error('Failed to save project'));
     request.onsuccess = () => {
-      console.log(`[RobotSim] Project "${projectName}" saved`);
+      console.log(`[ROBOPTIXX] Project "${projectName}" saved`);
       resolve(data);
     };
   });
@@ -60,7 +60,7 @@ export async function loadProject(projectName) {
     request.onerror = () => reject(new Error('Failed to load project'));
     request.onsuccess = () => {
       if (request.result) {
-        console.log(`[RobotSim] Project "${projectName}" loaded`);
+        console.log(`[ROBOPTIXX] Project "${projectName}" loaded`);
         resolve(request.result.data);
       } else {
         reject(new Error(`Project "${projectName}" not found`));
@@ -94,7 +94,7 @@ export async function deleteProject(projectName) {
     
     request.onerror = () => reject(new Error('Failed to delete project'));
     request.onsuccess = () => {
-      console.log(`[RobotSim] Project "${projectName}" deleted`);
+      console.log(`[ROBOPTIXX] Project "${projectName}" deleted`);
       resolve();
     };
   });

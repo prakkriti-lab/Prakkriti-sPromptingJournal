@@ -25,15 +25,15 @@ window.robot = robot;
 
 async function init() {
   try {
-    console.log('[RobotSim] Starting initialization...');
+    console.log('[ROBOPTIXX] Starting initialization...');
     
     // Initialize cloud environment (CDN imports + WASM)
     await initCloudEnvironment();
-    console.log('[RobotSim] ✓ Cloud environment ready');
+    console.log('[ROBOPTIXX] ✓ Cloud environment ready');
     
     // Initialize storage (IndexedDB)
     await initStorage();
-    console.log('[RobotSim] ✓ Storage ready');
+    console.log('[ROBOPTIXX] ✓ Storage ready');
     
     // Setup DOM elements
     const canvas = document.getElementById('viewport');
@@ -127,10 +127,10 @@ async function init() {
     
     requestAnimationFrame(animate);
     
-    console.log('[RobotSim] ✓ Initialization complete!');
+    console.log('[ROBOPTIXX] ✓ Initialization complete!');
     
   } catch (error) {
-    console.error('[RobotSim] Initialization failed:', error);
+    console.error('[ROBOPTIXX] Initialization failed:', error);
     document.body.innerHTML = `
       <div style="color: #f44336; font-family: monospace; padding: 20px;">
         <h2>RobotSim Initialization Error</h2>

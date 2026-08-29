@@ -26,7 +26,7 @@ export class SceneSystem {
     this.controls = new OrbitControls(this.camera, this.canvas);
     this.transformControls = new TransformControls(this.camera, this.canvas);
     this._initScene();
-    console.log('[RobotSim] Scene initialized');
+    console.log('[ROBOPTIXX] Scene initialized');
   }
 
   _initScene() {
