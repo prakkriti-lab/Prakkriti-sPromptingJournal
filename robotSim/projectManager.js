@@ -1,44 +1,82 @@
+import { saveProject, loadProject, listProjects, exportProjectJSON, importProjectJSON } from './storage.js';
+
 export class ProjectManager {
   constructor(robot, partsSystem, jointSystem, codeGenerator) {
     this.robot = robot;
     this.partsSystem = partsSystem;
     this.jointSystem = jointSystem;
     this.codeGenerator = codeGenerator;
+    this.currentProjectName = null;
   }
 
-  saveProject() {
-    const payload = {
+  _serializeProject() {
+    return {
       mode: this.robot.mode,
       parts: this.robot.parts.map((p) => ({
-        id: p.id, category: p.category, mass: p.mass, shape: p.shape,
+        id: p.id,
+        category: p.category,
+        mass: p.mass,
+        shape: p.shape,
         position: { x: p.mesh.position.x, y: p.mesh.position.y, z: p.mesh.position.z }
       })),
       joints: this.robot.joints,
       sensors: this.robot.sensors,
       timeline: this.robot.timeline
     };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'robot_project.json';
-    a.click();
-    URL.revokeObjectURL(a.href);
   }
 
-  async loadProject(file) {
-    const text = await file.text();
-    const data = JSON.parse(text);
-    this.resetScene();
-    const created = new Map();
-    data.parts.forEach((pd) => {
-      const p = this.partsSystem.createPart(pd.shape, pd.category, pd.mass);
-      p.mesh.position.set(pd.position.x, pd.position.y, pd.position.z);
-      created.set(pd.id, p);
-    });
-    data.joints.forEach((j) => {
-      this.jointSystem.createJoint(j.type, created.get(j.partA), created.get(j.partB), j);
-    });
-    this.robot.timeline = data.timeline || [];
+  async saveProject(projectName) {
+    try {
+      const payload = this._serializeProject();
+      await saveProject(projectName, payload);
+      this.currentProjectName = projectName;
+      console.log(`[RobotSim] Project "${projectName}" saved to IndexedDB`);
+      return true;
+    } catch (error) {
+      console.error('[RobotSim] Failed to save project:', error);
+      alert('Failed to save project: ' + error.message);
+      return false;
+    }
+  }
+
+  async loadProject(projectName) {
+    try {
+      const data = await loadProject(projectName);
+      this.resetScene();
+      const created = new Map();
+      
+      data.parts.forEach((pd) => {
+        const p = this.partsSystem.createPart(pd.shape, pd.category, pd.mass);
+        p.mesh.position.set(pd.position.x, pd.position.y, pd.position.z);
+        created.set(pd.id, p);
+      });
+      
+      data.joints.forEach((j) => {
+        if (created.has(j.partA) && created.has(j.partB)) {
+          this.jointSystem.createJoint(j.type, created.get(j.partA), created.get(j.partB), j);
+        }
+      });
+      
+      this.robot.timeline = data.timeline || [];
+      this.robot.sensors = data.sensors || [];
+      this.currentProjectName = projectName;
+      
+      console.log(`[RobotSim] Project "${projectName}" loaded from IndexedDB`);
+      return true;
+    } catch (error) {
+      console.error('[RobotSim] Failed to load project:', error);
+      alert('Failed to load project: ' + error.message);
+      return false;
+    }
+  }
+
+  async listProjects() {
+    try {
+      return await listProjects();
+    } catch (error) {
+      console.error('[RobotSim] Failed to list projects:', error);
+      return [];
+    }
   }
 
   resetScene() {
@@ -51,5 +89,48 @@ export class ProjectManager {
 
   exportArduino() {
     this.codeGenerator.download();
+  }
+
+  exportProjectJSON() {
+    const payload = this._serializeProject();
+    const json = exportProjectJSON(payload);
+    const blob = new Blob([json], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `robot_project_${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  async importProjectJSON(file) {
+    try {
+      const text = await file.text();
+      const data = importProjectJSON(text);
+      
+      this.resetScene();
+      const created = new Map();
+      
+      data.parts.forEach((pd) => {
+        const p = this.partsSystem.createPart(pd.shape, pd.category, pd.mass);
+        p.mesh.position.set(pd.position.x, pd.position.y, pd.position.z);
+        created.set(pd.id, p);
+      });
+      
+      data.joints.forEach((j) => {
+        if (created.has(j.partA) && created.has(j.partB)) {
+          this.jointSystem.createJoint(j.type, created.get(j.partA), created.get(j.partB), j);
+        }
+      });
+      
+      this.robot.timeline = data.timeline || [];
+      this.robot.sensors = data.sensors || [];
+      
+      console.log('[RobotSim] Project imported from JSON');
+      return true;
+    } catch (error) {
+      console.error('[RobotSim] Failed to import project:', error);
+      alert('Failed to import project: ' + error.message);
+      return false;
+    }
   }
 }

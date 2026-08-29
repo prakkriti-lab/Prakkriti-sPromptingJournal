@@ -1,4 +1,4 @@
-import * as THREE from './libs/three.module.js';
+import { THREE } from './cloud-imports.js';
 
 const SHAPE_MAP = {
   Cube: () => new THREE.BoxGeometry(1, 1, 1),
@@ -19,6 +19,11 @@ export class PartsSystem {
   }
 
   createPart(shape, category = 'Cores', mass = 1) {
+    if (!SHAPE_MAP[shape]) {
+      console.warn(`Unknown shape: ${shape}, defaulting to Cube`);
+      shape = 'Cube';
+    }
+
     const geometry = SHAPE_MAP[shape]();
     const material = new THREE.MeshStandardMaterial({ color: 0x7db2ff });
     const mesh = new THREE.Mesh(geometry, material);
@@ -32,7 +37,8 @@ export class PartsSystem {
       category,
       mass,
       attachmentPoints: this._buildAttachmentPoints(),
-      shape
+      shape,
+      lastPressure: 0
     };
 
     mesh.userData.partId = part.id;
