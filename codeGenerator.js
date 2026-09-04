@@ -15,7 +15,8 @@ export class ArduinoCodeGenerator {
 
     code += `// ========== PART DECLARATIONS ==========\n`;
     this.robot.parts.forEach((part) => {
-      code += `// ${part.name} (Category: ${part.category}, Mass: ${part.mass}kg)\n`;
+      const imageInfo = part.imageFilename ? ` - Image: ${part.imageFilename}` : '';
+      code += `// ${part.name} (Category: ${part.category}, Mass: ${part.mass}kg${imageInfo})\n`;
     });
 
     code += `\n// ========== JOINT DECLARATIONS ==========\n`;

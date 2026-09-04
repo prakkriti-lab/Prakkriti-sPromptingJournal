@@ -20,8 +20,8 @@ export class PartsSystem {
     // Custom Robot Part Naming Scheme
     this.partNamingScheme = {
       'Cores': [
-        'Hexagonal',
-        'Dog_Core'
+        'Anchor_Hook',
+        'Spade'
       ],
       'Limbs': [
         'Lifting_Limb',
@@ -29,35 +29,45 @@ export class PartsSystem {
         'Hilly_Region_Limb',
         'Crew_Limb',
         'Spider_Limb',
-        'Clawed_Limb'
+        'Clawed_Limb',
+        'Paddle_Limb',
+        'Screw_Limb'
       ],
       'Joints': [
-        'Pivotal_Joint',
-        'Axle',
         'Rolling_Hinge',
-        'Hinge'
+        'Gear_Axle',
+        'Wheel_Roller'
       ],
       'Cushioning': [
-        'Cushioning_Roller_1',
         'Cushioning_Roller_2'
       ],
-      'Sensors': [
-        'Distance_Sensor',
-        'Pressure_Sensor',
-        'Gyro_Sensor',
-        'IMU_Sensor',
-        'Camera_Sensor'
-      ],
       'Tools': [
-        'Gripper_Left',
-        'Gripper_Right',
-        'Drill_Tool',
-        'Cutter_Tool'
+        'Cartwheel',
+        'Airshot'
       ]
     };
     
     this.partNameCounters = {};
-    this.partAssets = {}; // Image assets mapping
+    
+    // IMAGE FILENAME MAPPING (Exact filenames from user's Assets)
+    this.partAssets = {
+      'Anchor_Hook': 'Anchor Hook',
+      'Spade': 'Spade',
+      'Clawed_Limb': 'Clawed Limb',
+      'Crew_Limb': 'Crew Limb',
+      'Lifting_Limb': 'Lifting Limb',
+      'Hilly_Region_Limb': 'Sandy/Hilly Region Limb',
+      'Spider_Limb': 'Spider Limb',
+      'Running_Limb': 'Running Limb',
+      'Paddle_Limb': 'Paddle Limb',
+      'Screw_Limb': 'Screw Limb',
+      'Rolling_Hinge': 'Rolling Hinge',
+      'Gear_Axle': 'Gear Axle / Wheel Roller',
+      'Wheel_Roller': 'Wheel Roller',
+      'Cushioning_Roller_2': 'Cushioning Roller 2',
+      'Cartwheel': 'Cartwheel',
+      'Airshot': 'Airshot'
+    };
   }
 
   createPart(shape, category = 'Cores', mass = 1, customName = null) {
@@ -90,6 +100,10 @@ export class PartsSystem {
       }
     }
 
+    // Get image filename from mapping
+    const imageFilename = this.partAssets[partName];
+    const imageAssetPath = imageFilename ? `assets/images/${imageFilename}` : null;
+
     const part = {
       id: `part_${this.idCounter++}`,
       name: partName,
@@ -100,14 +114,15 @@ export class PartsSystem {
       attachmentPoints: this._buildAttachmentPoints(),
       shape,
       lastPressure: 0,
-      imageAsset: this.partAssets[partName] || null
+      imageAsset: imageAssetPath,
+      imageFilename: imageFilename
     };
 
     mesh.userData.partId = part.id;
     mesh.userData.partName = part.name;
     this.robot.parts.push(part);
     
-    console.log(`[ROBOPTIXX] Created part: ${part.name} (${part.id})`);
+    console.log(`[ROBOPTIXX] Created part: ${part.name} (${part.id}) - Image: ${imageFilename || 'None'}`);
     return part;
   }
 
@@ -126,12 +141,20 @@ export class PartsSystem {
     return this.robot.parts.find(p => p.name === name);
   }
 
-  setPartAsset(partName, assetPath) {
-    this.partAssets[partName] = assetPath;
+  setPartAsset(partName, imageFilename) {
+    this.partAssets[partName] = imageFilename;
     const part = this.getPartByName(partName);
     if (part) {
-      part.imageAsset = assetPath;
+      part.imageFilename = imageFilename;
+      part.imageAsset = `assets/images/${imageFilename}`;
     }
+  }
+
+  // Auto-detect image files in assets/images/ folder
+  async autoDetectImages() {
+    console.log('[ROBOPTIXX] Auto-detecting image files...');
+    // This will be called when assets folder is populated
+    // Images will auto-load based on filename matching
   }
 
   removePart(partId) {

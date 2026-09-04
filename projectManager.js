@@ -18,6 +18,7 @@ export class ProjectManager {
         category: p.category,
         mass: p.mass,
         shape: p.shape,
+        imageFilename: p.imageFilename,
         imageAsset: p.imageAsset,
         position: { x: p.mesh.position.x, y: p.mesh.position.y, z: p.mesh.position.z }
       })),
@@ -50,9 +51,10 @@ export class ProjectManager {
       data.parts.forEach((pd) => {
         const p = this.partsSystem.createPart(pd.shape, pd.category, pd.mass, pd.name);
         p.mesh.position.set(pd.position.x, pd.position.y, pd.position.z);
-        if (pd.imageAsset) {
-          p.imageAsset = pd.imageAsset;
-          this.partsSystem.setPartAsset(pd.name, pd.imageAsset);
+        if (pd.imageFilename) {
+          p.imageFilename = pd.imageFilename;
+          p.imageAsset = `assets/images/${pd.imageFilename}`;
+          this.partsSystem.setPartAsset(pd.name, pd.imageFilename);
         }
         created.set(pd.id, p);
       });
