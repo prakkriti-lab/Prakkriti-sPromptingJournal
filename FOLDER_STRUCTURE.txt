@@ -1,0 +1,86 @@
+ROBOPTIXX - FOLDER STRUCTURE
+============================
+
+assets/images/
+│
+├── cores/
+│   ├── .gitkeep (placeholder)
+│   ├── hexagonal_1.png
+│   ├── hexagonal_2.png
+│   ├── dog_core_1.png
+│   └── dog_core_2.png
+│
+├── limbs/
+│   ├── .gitkeep (placeholder)
+│   ├── lifting_limb_1.png
+│   ├── lifting_limb_2.png
+│   ├── running_limb_1.png
+│   ├── running_limb_2.png
+│   ├── hilly_region_limb_1.png
+│   ├── crew_limb_1.png
+│   ├── spider_limb_1.png
+│   ├── clawed_limb_1.png
+│   └── clawed_limb_2.png
+│
+├── joints/
+│   ├── .gitkeep (placeholder)
+│   ├── pivotal_joint_1.png
+│   ├── pivotal_joint_2.png
+│   ├── axle_1.png
+│   ├── rolling_hinge_1.png
+│   └── hinge_1.png
+│
+├── cushioning/
+│   ├── .gitkeep (placeholder)
+│   ├── cushioning_roller_1_1.png
+│   ├── cushioning_roller_1_2.png
+│   ├── cushioning_roller_2_1.png
+│   └── cushioning_roller_2_2.png
+│
+├── sensors/
+│   ├── .gitkeep (placeholder)
+│   ├── distance_sensor_1.png
+│   ├── pressure_sensor_1.png
+│   ├── gyro_sensor_1.png
+│   ├── imu_sensor_1.png
+│   └── camera_sensor_1.png
+│
+├── tools/
+│   ├── .gitkeep (placeholder)
+│   ├── gripper_left_1.png
+│   ├── gripper_right_1.png
+│   ├── drill_tool_1.png
+│   └── cutter_tool_1.png
+│
+└── README.md (folder guide)
+
+════════════════════════════════════
+
+EXPECTED FILE COUNTS:
+
+cores/        → 2-4 images
+limbs/        → 6-10 images  
+joints/       → 4-6 images
+cushioning/   → 2-4 images
+sensors/      → 0-5 images (optional)
+tools/        → 0-4 images (optional)
+─────────────────────────
+Total:        → ~20 images
+
+════════════════════════════════════
+
+HOW TO ADD YOUR IMAGES:
+
+1. Go to: C:\Users\paris\Downloads\Assets\
+2. Rename images (see naming guide)
+3. GitHub .dev में open करो
+4. assets/images/ navigate करो
+5. Drag images to correct folder:
+   - Hexagonal images → cores/
+   - Lifting/Running limbs → limbs/
+   - Joints → joints/
+   - Cushioning → cushioning/
+6. Commit: "Add 20 robot part images"
+7. Push to GitHub
+
+════════════════════════════════════
