@@ -30,6 +30,10 @@ export class UISystem {
       status: document.getElementById('timeline-status'),
       inspectorEmpty: document.getElementById('inspector-empty'),
       fields: document.getElementById('inspector-fields'),
+      partName: document.getElementById('ins-part-name'),
+      partId: document.getElementById('ins-part-id'),
+      partCategory: document.getElementById('ins-part-category'),
+      partImagePreview: document.getElementById('ins-part-image'),
       mass: document.getElementById('ins-mass'),
       minA: document.getElementById('ins-min-angle'),
       maxA: document.getElementById('ins-max-angle'),
@@ -146,8 +150,22 @@ export class UISystem {
 
   inspectPart(part) {
     this.selectedJoint = null;
+    this.selectedPart = part;
     this.dom.inspectorEmpty.classList.add('hidden');
     this.dom.fields.classList.remove('hidden');
+    
+    // Part details
+    this.dom.partName.value = part.name;
+    this.dom.partId.value = part.id;
+    this.dom.partCategory.value = part.category;
+    
+    // Image preview
+    if (part.imageAsset) {
+      this.dom.partImagePreview.innerHTML = `<img src="${part.imageAsset}" style="width: 100%; height: 100%; object-fit: contain;" />`;
+    } else {
+      this.dom.partImagePreview.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #666;">No image</div>`;
+    }
+    
     this.dom.mass.value = part.mass;
     this.dom.minA.value = '';
     this.dom.maxA.value = '';
@@ -169,6 +187,13 @@ export class UISystem {
   }
 
   applyInspector() {
+    // Update part name
+    if (this.selectedPart && this.dom.partName.value !== '') {
+      const newName = this.dom.partName.value;
+      this.ctx.partsSystem.renamePart(this.selectedPart.id, newName);
+      this.selectedPart.name = newName;
+    }
+
     const selectedPart = this.ctx.sceneSystem.selected[0];
     if (selectedPart && this.dom.mass.value !== '') {
       selectedPart.mass = Number(this.dom.mass.value);

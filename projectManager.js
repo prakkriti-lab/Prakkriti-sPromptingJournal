@@ -14,9 +14,11 @@ export class ProjectManager {
       mode: this.robot.mode,
       parts: this.robot.parts.map((p) => ({
         id: p.id,
+        name: p.name,
         category: p.category,
         mass: p.mass,
         shape: p.shape,
+        imageAsset: p.imageAsset,
         position: { x: p.mesh.position.x, y: p.mesh.position.y, z: p.mesh.position.z }
       })),
       joints: this.robot.joints,
@@ -46,8 +48,12 @@ export class ProjectManager {
       const created = new Map();
       
       data.parts.forEach((pd) => {
-        const p = this.partsSystem.createPart(pd.shape, pd.category, pd.mass);
+        const p = this.partsSystem.createPart(pd.shape, pd.category, pd.mass, pd.name);
         p.mesh.position.set(pd.position.x, pd.position.y, pd.position.z);
+        if (pd.imageAsset) {
+          p.imageAsset = pd.imageAsset;
+          this.partsSystem.setPartAsset(pd.name, pd.imageAsset);
+        }
         created.set(pd.id, p);
       });
       

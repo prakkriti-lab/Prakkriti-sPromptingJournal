@@ -65,7 +65,35 @@
       <h3>Inspector</h3>
       <div id="inspector-empty">Select a part or joint.</div>
       <div id="inspector-fields" class="hidden">
-        <label>Mass <input id="ins-mass" type="number" step="0.1" min="0" /></label>
+        
+        <!-- Part Name Section -->
+        <div style="background: rgba(103, 183, 255, 0.1); padding: 8px; border-radius: 4px; margin-bottom: 10px; border: 1px solid #67b7ff;">
+          <label style="font-weight: bold; color: #67b7ff;">🏷️ Part Details</label>
+          <label>Name <input id="ins-part-name" type="text" placeholder="e.g., Lifting_Limb" style="margin-top: 4px;" /></label>
+          <label>ID <input id="ins-part-id" type="text" readonly style="background: #333; color: #888; margin-top: 4px;" /></label>
+          <label>Category <input id="ins-part-category" type="text" readonly style="background: #333; color: #888; margin-top: 4px;" /></label>
+          
+          <!-- Image Preview -->
+          <div id="ins-part-image" style="
+            width: 100%;
+            height: 120px;
+            background: #1a1a25;
+            border: 2px solid #89ff7a;
+            border-radius: 6px;
+            margin-top: 8px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-size: 12px;
+          ">No image</div>
+        </div>
+
+        <!-- Mass & Physics -->
+        <label>Mass (kg) <input id="ins-mass" type="number" step="0.1" min="0" /></label>
+        
+        <!-- Joint Controls -->
         <label>Min Angle (°) <input id="ins-min-angle" type="number" /></label>
         <label>Max Angle (°) <input id="ins-max-angle" type="number" /></label>
         <label>Speed (°/s) <input id="ins-speed" type="number" min="1" /></label>
