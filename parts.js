@@ -8,7 +8,7 @@ const SHAPE_MAP = {
   Plate: () => new THREE.BoxGeometry(1.4, 0.2, 1.4)
 };
 
-export const PART_CATEGORIES = ['Cores', 'Limbs', 'Joints', 'Cushioning', 'Sensors', 'Tools'];
+export const PART_CATEGORIES = ['Limbs', 'Connectors', 'Levers', 'Joints', 'Cushioning'];
 
 export class PartsSystem {
   constructor(scene, physics, robot) {
@@ -17,12 +17,8 @@ export class PartsSystem {
     this.robot = robot;
     this.idCounter = 1;
     
-    // Custom Robot Part Naming Scheme
+    // Custom Robot Part Naming Scheme - UPDATED TO ACTUAL FOLDERS
     this.partNamingScheme = {
-      'Cores': [
-        'Anchor_Hook',
-        'Spade'
-      ],
       'Limbs': [
         'Lifting_Limb',
         'Running_Limb',
@@ -33,6 +29,14 @@ export class PartsSystem {
         'Paddle_Limb',
         'Screw_Limb'
       ],
+      'Connectors': [
+        'Anchor_Hook',
+        'Spade'
+      ],
+      'Levers': [
+        'Lever_1',
+        'Lever_2'
+      ],
       'Joints': [
         'Rolling_Hinge',
         'Gear_Axle',
@@ -40,33 +44,38 @@ export class PartsSystem {
       ],
       'Cushioning': [
         'Cushioning_Roller_2'
-      ],
-      'Tools': [
-        'Cartwheel',
-        'Airshot'
       ]
     };
     
     this.partNameCounters = {};
     
-    // IMAGE FILENAME MAPPING (Exact filenames from user's Assets)
+    // IMAGE FILENAME MAPPING - ACTUAL USER IMAGES
     this.partAssets = {
-      'Anchor_Hook': 'Anchor Hook',
-      'Spade': 'Spade',
-      'Clawed_Limb': 'Clawed Limb',
-      'Crew_Limb': 'Crew Limb',
+      // Limbs folder
       'Lifting_Limb': 'Lifting Limb',
-      'Hilly_Region_Limb': 'Sandy/Hilly Region Limb',
-      'Spider_Limb': 'Spider Limb',
       'Running_Limb': 'Running Limb',
+      'Hilly_Region_Limb': 'Sandy/Hilly Region Limb',
+      'Crew_Limb': 'Crew Limb',
+      'Spider_Limb': 'Spider Limb',
+      'Clawed_Limb': 'Clawed Limb',
       'Paddle_Limb': 'Paddle Limb',
       'Screw_Limb': 'Screw Limb',
+      
+      // Connectors folder
+      'Anchor_Hook': 'Anchor Hook',
+      'Spade': 'Spade',
+      
+      // Levers folder (user will add images)
+      'Lever_1': 'Lever_1',
+      'Lever_2': 'Lever_2',
+      
+      // Joints folder
       'Rolling_Hinge': 'Rolling Hinge',
       'Gear_Axle': 'Gear Axle / Wheel Roller',
       'Wheel_Roller': 'Wheel Roller',
-      'Cushioning_Roller_2': 'Cushioning Roller 2',
-      'Cartwheel': 'Cartwheel',
-      'Airshot': 'Airshot'
+      
+      // Cushioning folder
+      'Cushioning_Roller_2': 'Cushioning Roller 2'
     };
   }
 
@@ -100,9 +109,20 @@ export class PartsSystem {
       }
     }
 
-    // Get image filename from mapping
+    // Get image filename from mapping and construct folder path
     const imageFilename = this.partAssets[partName];
-    const imageAssetPath = imageFilename ? `assets/images/${imageFilename}` : null;
+    
+    // Determine folder based on category
+    const folderMap = {
+      'Limbs': 'limbs',
+      'Connectors': 'connectors',
+      'Levers': 'levers',
+      'Joints': 'joints',
+      'Cushioning': 'cushioning'
+    };
+    
+    const folder = folderMap[category] || category.toLowerCase();
+    const imageAssetPath = imageFilename ? `assets/images/${folder}/${imageFilename}` : null;
 
     const part = {
       id: `part_${this.idCounter++}`,
@@ -127,7 +147,7 @@ export class PartsSystem {
     mesh.userData.partName = part.name;
     this.robot.parts.push(part);
     
-    console.log(`[ROBOPTIXX] Created part: ${part.name} (${part.id}) - Image: ${imageFilename || 'None'}`);
+    console.log(`[ROBOPTIXX] Created part: ${part.name} (${part.id}) - Image: ${imageFilename || 'None'} - Path: ${imageAssetPath || 'None'}`);
     return part;
   }
 
