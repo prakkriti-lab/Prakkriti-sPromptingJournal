@@ -15,8 +15,9 @@ export class ArduinoCodeGenerator {
 
     code += `// ========== PART DECLARATIONS ==========\n`;
     this.robot.parts.forEach((part) => {
-      const imageInfo = part.imageFilename ? ` - Image: ${part.imageFilename}` : '';
-      code += `// ${part.name} (Category: ${part.category}, Mass: ${part.mass}kg${imageInfo})\n`;
+      const imageInfo = part.imageFilename ? ` | Image: ${part.imageFilename}` : '';
+      const scaleInfo = part.mesh.scale.x !== 1 ? ` | Scale: ${part.mesh.scale.x.toFixed(2)}x` : '';
+      code += `// ${part.name} (Category: ${part.category}, Mass: ${part.mass}kg${scaleInfo}${imageInfo})\n`;
     });
 
     code += `\n// ========== JOINT DECLARATIONS ==========\n`;

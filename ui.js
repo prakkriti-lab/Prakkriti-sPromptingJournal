@@ -1,12 +1,16 @@
 import { PART_CATEGORIES } from './parts.js';
+import { TransformSystem } from './transform.js';
 
 export class UISystem {
   constructor(ctx) {
     this.ctx = ctx;
     this.dom = this._collectDom();
     this.selectedJoint = null;
+    this.selectedPart = null;
+    this.transformSystem = new TransformSystem(ctx.sceneSystem.scene, this);
     this._populateParts();
     this._bind();
+    this._bindTransformControls();
   }
 
   _collectDom() {
@@ -35,6 +39,20 @@ export class UISystem {
       partCategory: document.getElementById('ins-part-category'),
       partImagePreview: document.getElementById('ins-part-image'),
       mass: document.getElementById('ins-mass'),
+      // Transform controls
+      scaleX: document.getElementById('scale-x'),
+      scaleY: document.getElementById('scale-y'),
+      scaleZ: document.getElementById('scale-z'),
+      scaleUpBtn: document.getElementById('scale-up-btn'),
+      scaleDownBtn: document.getElementById('scale-down-btn'),
+      rotateX: document.getElementById('rotate-x'),
+      rotateY: document.getElementById('rotate-y'),
+      rotateZ: document.getElementById('rotate-z'),
+      rotXBtn: document.getElementById('rot-x-btn'),
+      rotYBtn: document.getElementById('rot-y-btn'),
+      rotZBtn: document.getElementById('rot-z-btn'),
+      resetTransformBtn: document.getElementById('reset-transform-btn'),
+      // Joint controls
       minA: document.getElementById('ins-min-angle'),
       maxA: document.getElementById('ins-max-angle'),
       servoSpeed: document.getElementById('ins-speed'),
@@ -151,6 +169,7 @@ export class UISystem {
   inspectPart(part) {
     this.selectedJoint = null;
     this.selectedPart = part;
+    this.transformSystem.selectPart(part);
     this.dom.inspectorEmpty.classList.add('hidden');
     this.dom.fields.classList.remove('hidden');
     
@@ -167,6 +186,10 @@ export class UISystem {
     }
     
     this.dom.mass.value = part.mass;
+    
+    // Update transform display
+    this.updateTransformDisplay(part);
+    
     this.dom.minA.value = '';
     this.dom.maxA.value = '';
     this.dom.servoSpeed.value = '';
@@ -208,6 +231,79 @@ export class UISystem {
       this.selectedJoint.speedDegPerSec = Number(this.dom.servoSpeed.value || 60);
       this.selectedJoint.arduinoPin = this.dom.pin.value === '' ? null : Number(this.dom.pin.value);
       this.selectedJoint.motorEnabled = this.dom.motor.checked;
+    }
+  }
+
+  _bindTransformControls() {
+    // Scale controls
+    this.dom.scaleUpBtn.addEventListener('click', () => {
+      this.transformSystem.scalePart('xyz', 1.1);
+    });
+
+    this.dom.scaleDownBtn.addEventListener('click', () => {
+      this.transformSystem.scalePart('xyz', 0.9);
+    });
+
+    this.dom.scaleX.addEventListener('change', (e) => {
+      this.transformSystem.setScale('x', Number(e.target.value));
+    });
+
+    this.dom.scaleY.addEventListener('change', (e) => {
+      this.transformSystem.setScale('y', Number(e.target.value));
+    });
+
+    this.dom.scaleZ.addEventListener('change', (e) => {
+      this.transformSystem.setScale('z', Number(e.target.value));
+    });
+
+    // Rotation controls
+    this.dom.rotXBtn.addEventListener('click', () => {
+      const angle = Number(this.dom.rotateX.value) || 15;
+      this.transformSystem.rotatePart('x', angle);
+    });
+
+    this.dom.rotYBtn.addEventListener('click', () => {
+      const angle = Number(this.dom.rotateY.value) || 15;
+      this.transformSystem.rotatePart('y', angle);
+    });
+
+    this.dom.rotZBtn.addEventListener('click', () => {
+      const angle = Number(this.dom.rotateZ.value) || 15;
+      this.transformSystem.rotatePart('z', angle);
+    });
+
+    this.dom.rotateX.addEventListener('change', (e) => {
+      this.transformSystem.setRotation('x', Number(e.target.value));
+    });
+
+    this.dom.rotateY.addEventListener('change', (e) => {
+      this.transformSystem.setRotation('y', Number(e.target.value));
+    });
+
+    this.dom.rotateZ.addEventListener('change', (e) => {
+      this.transformSystem.setRotation('z', Number(e.target.value));
+    });
+
+    // Reset
+    this.dom.resetTransformBtn.addEventListener('click', () => {
+      this.transformSystem.resetTransform();
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      this.transformSystem.handleKeyboard(e);
+    });
+  }
+
+  updateTransformDisplay(part) {
+    const values = this.transformSystem.getTransformValues();
+    if (values) {
+      this.dom.scaleX.value = values.scaleX;
+      this.dom.scaleY.value = values.scaleY;
+      this.dom.scaleZ.value = values.scaleZ;
+      this.dom.rotateX.value = values.rotX;
+      this.dom.rotateY.value = values.rotY;
+      this.dom.rotateZ.value = values.rotZ;
     }
   }
 }

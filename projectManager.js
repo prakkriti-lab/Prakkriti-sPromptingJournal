@@ -1,4 +1,6 @@
+import { THREE } from './cloud-imports.js';
 import { saveProject, loadProject, listProjects, exportProjectJSON, importProjectJSON } from './storage.js';
+const { Euler } = THREE;
 
 export class ProjectManager {
   constructor(robot, partsSystem, jointSystem, codeGenerator) {
@@ -20,7 +22,16 @@ export class ProjectManager {
         shape: p.shape,
         imageFilename: p.imageFilename,
         imageAsset: p.imageAsset,
-        position: { x: p.mesh.position.x, y: p.mesh.position.y, z: p.mesh.position.z }
+        position: { x: p.mesh.position.x, y: p.mesh.position.y, z: p.mesh.position.z },
+        // Transform data
+        transform: {
+          scale: { x: p.mesh.scale.x, y: p.mesh.scale.y, z: p.mesh.scale.z },
+          rotation: p.transform ? {
+            x: p.transform.rotation?.x || 0,
+            y: p.transform.rotation?.y || 0,
+            z: p.transform.rotation?.z || 0
+          } : { x: 0, y: 0, z: 0 }
+        }
       })),
       joints: this.robot.joints,
       sensors: this.robot.sensors,
@@ -51,6 +62,19 @@ export class ProjectManager {
       data.parts.forEach((pd) => {
         const p = this.partsSystem.createPart(pd.shape, pd.category, pd.mass, pd.name);
         p.mesh.position.set(pd.position.x, pd.position.y, pd.position.z);
+        
+        // Restore transform data
+        if (pd.transform) {
+          if (pd.transform.scale) {
+            p.mesh.scale.set(pd.transform.scale.x, pd.transform.scale.y, pd.transform.scale.z);
+          }
+          if (pd.transform.rotation) {
+            const euler = new Euler(pd.transform.rotation.x, pd.transform.rotation.y, pd.transform.rotation.z);
+            p.mesh.quaternion.setFromEuler(euler);
+            p.transform.rotation = euler;
+          }
+        }
+        
         if (pd.imageFilename) {
           p.imageFilename = pd.imageFilename;
           p.imageAsset = `assets/images/${pd.imageFilename}`;

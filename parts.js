@@ -115,7 +115,12 @@ export class PartsSystem {
       shape,
       lastPressure: 0,
       imageAsset: imageAssetPath,
-      imageFilename: imageFilename
+      imageFilename: imageFilename,
+      // Transform data
+      transform: {
+        scale: mesh.scale.clone(),
+        rotation: new THREE.Euler().setFromQuaternion(mesh.quaternion)
+      }
     };
 
     mesh.userData.partId = part.id;

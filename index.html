@@ -93,6 +93,43 @@
         <!-- Mass & Physics -->
         <label>Mass (kg) <input id="ins-mass" type="number" step="0.1" min="0" /></label>
         
+        <!-- TRANSFORM CONTROLS -->
+        <div style="background: rgba(255, 179, 71, 0.1); padding: 8px; border-radius: 4px; margin: 10px 0; border: 1px solid #ffb347;">
+          <label style="font-weight: bold; color: #ffb347;">⚙️ Transform</label>
+          
+          <!-- Scale Controls -->
+          <div style="margin-top: 8px; padding: 6px; background: rgba(255, 179, 71, 0.05); border-radius: 3px;">
+            <label style="font-size: 12px; color: #ffb347;">📏 Scale (Resize)</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; margin-top: 4px;">
+              <label>X <input id="scale-x" type="number" step="0.1" min="0.1" value="1" style="width: 100%;" /></label>
+              <label>Y <input id="scale-y" type="number" step="0.1" min="0.1" value="1" style="width: 100%;" /></label>
+              <label>Z <input id="scale-z" type="number" step="0.1" min="0.1" value="1" style="width: 100%;" /></label>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 4px;">
+              <button id="scale-up-btn" style="padding: 4px; font-size: 11px;">+ Size (E)</button>
+              <button id="scale-down-btn" style="padding: 4px; font-size: 11px;">- Size (Q)</button>
+            </div>
+          </div>
+
+          <!-- Rotation Controls -->
+          <div style="margin-top: 8px; padding: 6px; background: rgba(255, 179, 71, 0.05); border-radius: 3px;">
+            <label style="font-size: 12px; color: #ffb347;">🔄 Rotate</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; margin-top: 4px;">
+              <label>X° <input id="rotate-x" type="number" step="5" value="0" style="width: 100%;" /></label>
+              <label>Y° <input id="rotate-y" type="number" step="5" value="0" style="width: 100%;" /></label>
+              <label>Z° <input id="rotate-z" type="number" step="5" value="0" style="width: 100%;" /></label>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; margin-top: 4px;">
+              <button id="rot-x-btn" style="padding: 4px; font-size: 11px;">Rot X (R)</button>
+              <button id="rot-y-btn" style="padding: 4px; font-size: 11px;">Rot Y (T)</button>
+              <button id="rot-z-btn" style="padding: 4px; font-size: 11px;">Rot Z (Y)</button>
+            </div>
+          </div>
+
+          <!-- Reset -->
+          <button id="reset-transform-btn" style="width: 100%; margin-top: 6px; padding: 6px; background: #ff6b6b; color: white; border: none; border-radius: 3px; font-size: 12px; cursor: pointer;">Reset (Z)</button>
+        </div>
+        
         <!-- Joint Controls -->
         <label>Min Angle (°) <input id="ins-min-angle" type="number" /></label>
         <label>Max Angle (°) <input id="ins-max-angle" type="number" /></label>

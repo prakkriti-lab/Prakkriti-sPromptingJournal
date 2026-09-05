@@ -1,0 +1,165 @@
+════════════════════════════════════════════════════════════════
+🎯 ROBOPTIXX - UPLOAD YOUR 16 IMAGES (NO RENAMING!)
+════════════════════════════════════════════════════════════════
+
+CODE IS READY! ✅ All changes pushed to GitHub!
+
+════════════════════════════════════════════════════════════════
+YOUR 16 IMAGE FILES (Exact Filenames Required)
+════════════════════════════════════════════════════════════════
+
+CORES (2 images):
+□ Anchor Hook.[png/jpg]
+□ Spade.[png/jpg]
+
+LIMBS (8 images):
+□ Lifting Limb.[png/jpg]
+□ Running Limb.[png/jpg]
+□ Sandy/Hilly Region Limb.[png/jpg]
+□ Crew Limb.[png/jpg]
+□ Spider Limb.[png/jpg]
+□ Clawed Limb.[png/jpg]
+□ Paddle Limb.[png/jpg]
+□ Screw Limb.[png/jpg]
+
+JOINTS (3 images):
+□ Rolling Hinge.[png/jpg]
+□ Gear Axle / Wheel Roller.[png/jpg]
+□ Wheel Roller.[png/jpg]
+
+CUSHIONING (1 image):
+□ Cushioning Roller 2.[png/jpg]
+
+TOOLS (2 images):
+□ Cartwheel.[png/jpg]
+□ Airshot.[png/jpg]
+
+════════════════════════════════════════════════════════════════
+STEP 1: VERIFY FILENAMES (CRITICAL!)
+════════════════════════════════════════════════════════════════
+
+✅ CORRECT:
+- Lifting Limb.png
+- Running Limb.jpg
+- Crew Limb.jpeg
+
+❌ WRONG (Won't work):
+- lifting_limb.png (underscores not spaces)
+- Lifting Limb.PNG (case sensitive)
+- Lifting-Limb.png (dashes not spaces)
+
+FILENAMES MUST MATCH EXACTLY AS LISTED ABOVE!
+Keep spaces, not underscores!
+
+════════════════════════════════════════════════════════════════
+STEP 2: UPLOAD TO GITHUB (5 MINUTES)
+════════════════════════════════════════════════════════════════
+
+1. Open GitHub .dev:
+   https://github.com/prakkriti-lab/Prakkriti-sPromptingJournal
+   Press: . (dot key)
+
+2. Navigate to: assets/images/
+   (Right click on assets folder → New File... or just navigate)
+
+3. Drag & drop all 16 images from:
+   C:\Users\paris\Downloads\Assets\
+   
+   Into: GitHub .dev's assets/images/ folder
+
+4. GitHub auto-uploads!
+
+5. Commit with message:
+   "Add 16 robot part images - exact filenames"
+
+6. Push to GitHub
+
+════════════════════════════════════════════════════════════════
+STEP 3: WAIT FOR DEPLOY (2-5 MINUTES)
+════════════════════════════════════════════════════════════════
+
+GitHub Pages will auto-deploy!
+Check: https://github.com/prakkriti-lab/Prakkriti-sPromptingJournal/actions
+
+Green checkmark = Done! ✅
+
+════════════════════════════════════════════════════════════════
+STEP 4: TEST IN ROBOPTIXX
+════════════════════════════════════════════════════════════════
+
+Open: https://prakkriti-lab.github.io/Prakkriti-sPromptingJournal/
+
+Create a part:
+1. Category: Limbs
+2. Click: + Cylinder
+3. Auto-name: Lifting_Limb_1
+4. Select it
+5. Inspector shows:
+   ✅ Part Name: Lifting_Limb_1
+   ✅ Image preview: [Lifting Limb image]
+   ✅ Category: Limbs
+
+If image shows → Success! 🎉
+
+════════════════════════════════════════════════════════════════
+HOW IT WORKS INTERNALLY
+════════════════════════════════════════════════════════════════
+
+When you create a part:
+
+1. You select category (e.g., "Limbs")
+2. Click shape button (e.g., "+ Cylinder")
+3. Part auto-names: "Lifting_Limb_1"
+4. Code looks up: "Lifting_Limb" → "Lifting Limb" (image filename)
+5. Loads image from: assets/images/Lifting Limb.png
+6. Shows preview in inspector
+7. When saved, both name AND image filename stored
+8. Arduino code includes image references in comments
+
+════════════════════════════════════════════════════════════════
+IMPORTANT NOTES
+════════════════════════════════════════════════════════════════
+
+✅ NO NEED TO RENAME FILES!
+   Upload with exact filenames as you have them
+
+✅ NO NEED TO ORGANIZE IN SUBFOLDERS!
+   All 16 images go directly in assets/images/
+
+✅ FILENAMES ARE CASE SENSITIVE!
+   "Lifting Limb.png" ≠ "lifting limb.png"
+
+✅ SPACES NOT UNDERSCORES!
+   "Lifting Limb.png" ✅
+   "Lifting_Limb.png" ❌
+
+✅ FILE EXTENSIONS FLEXIBLE!
+   .png, .jpg, .jpeg all work
+
+════════════════════════════════════════════════════════════════
+EXPECTED RESULT
+════════════════════════════════════════════════════════════════
+
+When creating parts in ROBOPTIXX:
+
+CORES: Anchor Hook_1, Spade_1
+LIMBS: Lifting_Limb_1, Lifting_Limb_2, Running_Limb_1, etc
+JOINTS: Rolling_Hinge_1, Gear_Axle_1, Wheel_Roller_1
+TOOLS: Cartwheel_1, Airshot_1
+CUSHIONING: Cushioning_Roller_2_1
+
+Each part shows preview of its corresponding image!
+
+════════════════════════════════════════════════════════════════
+TIMELINE
+════════════════════════════════════════════════════════════════
+
+Upload images:       5 min
+GitHub deployment:   2-5 min
+Test in ROBOPTIXX:   2 min
+────────────────────────
+Total time:          10-12 min
+
+That's it! Ready to build! 🚀
+
+════════════════════════════════════════════════════════════════
