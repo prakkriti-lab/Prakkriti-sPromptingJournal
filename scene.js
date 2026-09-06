@@ -30,22 +30,8 @@ export class SceneSystem {
   }
 
   _initScene() {
-    // Create half white canvas background (top white, bottom dark)
-    const canvas = document.createElement('canvas');
-    canvas.width = 512;
-    canvas.height = 512;
-    const ctx = canvas.getContext('2d');
-    
-    // Top half: White
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillRect(0, 0, 512, 256);
-    
-    // Bottom half: Dark
-    ctx.fillStyle = '#1c2130';
-    ctx.fillRect(0, 256, 512, 256);
-    
-    const texture = new THREE.CanvasTexture(canvas);
-    this.scene.background = texture;
+    // Simple background - half white will come later
+    this.scene.background = new THREE.Color(0x1c2130);
     
     this.scene.add(new THREE.GridHelper(30, 30));
     this.scene.add(new THREE.AmbientLight(0xffffff, 0.5));
