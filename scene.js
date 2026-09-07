@@ -1,41 +1,52 @@
-import { THREE, loadThreeControls } from './cloud-imports.js';
-
-let OrbitControls, TransformControls;
+import { loadThreeControls } from './cloud-imports.js';
 
 export class SceneSystem {
   constructor(canvas, robot) {
     this.canvas = canvas;
     this.robot = robot;
-    this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(60, 1, 0.1, 1000);
-    this.camera.position.set(6, 6, 6);
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    this.THREE = null; // Will be set in init()
+    this.scene = null;
+    this.camera = null;
+    this.renderer = null;
     this.controls = null;
     this.transformControls = null;
-    this.raycaster = new THREE.Raycaster();
+    this.raycaster = null;
     this.pointer = { x: 0, y: 0 };
     this.selected = [];
-    this._bindResize();
   }
 
   async init() {
-    const controls = await loadThreeControls();
-    OrbitControls = controls.OrbitControls;
-    TransformControls = controls.TransformControls;
+    // Import THREE locally after it's guaranteed to be initialized
+    this.THREE = await import('https://cdn.jsdelivr.net/npm/three@r128/build/three.module.js').then(m => m.default || m);
     
+    if (!this.THREE) throw new Error('Failed to load THREE.js');
+    
+    // Now THREE is ready - create objects
+    this.scene = new this.THREE.Scene();
+    this.camera = new this.THREE.PerspectiveCamera(60, 1, 0.1, 1000);
+    this.camera.position.set(6, 6, 6);
+    this.renderer = new this.THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+    this.raycaster = new this.THREE.Raycaster();
+    
+    this._initScene();
+    this._bindResize();
+    
+    // Load controls
+    const { OrbitControls, TransformControls } = await loadThreeControls();
     this.controls = new OrbitControls(this.camera, this.canvas);
     this.transformControls = new TransformControls(this.camera, this.canvas);
-    this._initScene();
+    this.scene.add(this.transformControls);
+    
     console.log('[ROBOPTIXX] Scene initialized');
   }
 
   _initScene() {
-    // Simple background - half white will come later
-    this.scene.background = new THREE.Color(0x1c2130);
+    // Simple background
+    this.scene.background = new this.THREE.Color(0x1c2130);
     
-    this.scene.add(new THREE.GridHelper(30, 30));
-    this.scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-    this.scene.add(new THREE.DirectionalLight(0xffffff, 0.8));
+    this.scene.add(new this.THREE.GridHelper(30, 30));
+    this.scene.add(new this.THREE.AmbientLight(0xffffff, 0.5));
+    this.scene.add(new this.THREE.DirectionalLight(0xffffff, 0.8));
   }
 
   _bindResize() {

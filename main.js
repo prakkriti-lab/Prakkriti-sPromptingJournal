@@ -103,8 +103,8 @@ async function init() {
       snapSystem.applySnap(match, e.altKey);
     });
     
-    // Seed with starter core
-    partsSystem.createPart('Cube', 'Cores', 2);
+    // Seed with starter limb
+    partsSystem.createPart('Cube', 'Limbs', 2);
     
     // Animation loop
     let last = performance.now();
