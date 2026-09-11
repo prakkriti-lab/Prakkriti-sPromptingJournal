@@ -5,10 +5,10 @@ export let THREE = null;
 export let Ammo = null;
 
 const CDN_URLS = {
-  THREE: 'https://cdn.jsdelivr.net/npm/three@r128/build/three.module.js',
-  THREE_ORBIT: 'https://cdn.jsdelivr.net/npm/three@r128/examples/jsm/controls/OrbitControls.js',
-  THREE_TRANSFORM: 'https://cdn.jsdelivr.net/npm/three@r128/examples/jsm/controls/TransformControls.js',
-  AMMO_WASM: 'https://cdn.jsdelivr.net/npm/ammo.js@0.0.9/builds/ammo.wasm.js'
+  THREE: 'https://esm.sh/three@r128',
+  THREE_ORBIT: 'https://esm.sh/three@r128/examples/jsm/controls/OrbitControls.js',
+  THREE_TRANSFORM: 'https://esm.sh/three@r128/examples/jsm/controls/TransformControls.js',
+  AMMO_WASM: 'https://esm.sh/ammo.js@0.0.9'
 };
 
 export async function initCloudEnvironment() {
