@@ -1,12 +1,20 @@
 import { THREE } from './cloud-imports.js';
 
-const SHAPE_MAP = {
-  Cube: () => new THREE.BoxGeometry(1, 1, 1),
-  Cylinder: () => new THREE.CylinderGeometry(0.5, 0.5, 1),
-  Sphere: () => new THREE.SphereGeometry(0.5),
-  Capsule: () => new THREE.CapsuleGeometry(0.35, 0.8),
-  Plate: () => new THREE.BoxGeometry(1.4, 0.2, 1.4)
-};
+let SHAPE_MAP = null;
+
+function getShapeMap() {
+  if (!SHAPE_MAP) {
+    // THREE is now available from window (loaded via script tag)
+    SHAPE_MAP = {
+      Cube: () => new THREE.BoxGeometry(1, 1, 1),
+      Cylinder: () => new THREE.CylinderGeometry(0.5, 0.5, 1),
+      Sphere: () => new THREE.SphereGeometry(0.5),
+      Capsule: () => new THREE.CapsuleGeometry(0.35, 0.8),
+      Plate: () => new THREE.BoxGeometry(1.4, 0.2, 1.4)
+    };
+  }
+  return SHAPE_MAP;
+}
 
 export const PART_CATEGORIES = ['Limbs', 'Connectors', 'Levers', 'Joints', 'Cushioning'];
 
@@ -79,13 +87,14 @@ export class PartsSystem {
     };
   }
 
-  createPart(shape, category = 'Cores', mass = 1, customName = null) {
-    if (!SHAPE_MAP[shape]) {
+  createPart(shape, category = 'Limbs', mass = 1, customName = null) {
+    const shapeMap = getShapeMap();
+    if (!shapeMap[shape]) {
       console.warn(`Unknown shape: ${shape}, defaulting to Cube`);
       shape = 'Cube';
     }
 
-    const geometry = SHAPE_MAP[shape]();
+    const geometry = shapeMap[shape]();
     const material = new THREE.MeshStandardMaterial({ color: 0x7db2ff });
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.set((Math.random() - 0.5) * 3, 1, (Math.random() - 0.5) * 3);
