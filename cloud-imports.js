@@ -5,29 +5,32 @@ export let THREE = null;
 export let Ammo = null;
 
 const CDN_URLS = {
-  THREE: 'https://esm.sh/three@r128',
-  THREE_ORBIT: 'https://esm.sh/three@r128/examples/jsm/controls/OrbitControls.js',
-  THREE_TRANSFORM: 'https://esm.sh/three@r128/examples/jsm/controls/TransformControls.js',
-  AMMO_WASM: 'https://esm.sh/ammo.js@0.0.9'
+  THREE: 'https://cdn.jsdelivr.net/npm/three@r128/build/three.min.js',
+  THREE_ORBIT: 'https://cdn.jsdelivr.net/npm/three@r128/examples/js/controls/OrbitControls.js',
+  THREE_TRANSFORM: 'https://cdn.jsdelivr.net/npm/three@r128/examples/js/controls/TransformControls.js',
+  AMMO_WASM: 'https://cdn.jsdelivr.net/npm/ammo.js@0.0.9/builds/ammo.js'
 };
 
 export async function initCloudEnvironment() {
   try {
-    console.log('[ROBOPTIXX] Initializing cloud environment...');
+    console.log('[ROBOPTIXX] Waiting for THREE.js...');
     
-    // Load Three.js
-    THREE = await import(CDN_URLS.THREE).then(m => m.default || m);
-    if (!THREE) throw new Error('Failed to load Three.js');
+    // Script tags in HTML should have loaded THREE/Ammo globally
+    // Just wait for them to be available
+    let attempts = 0;
+    while (!window.THREE && attempts < 100) {
+      await new Promise(r => setTimeout(r, 50));
+      attempts++;
+    }
+    
+    if (!window.THREE) {
+      throw new Error('Failed to load Three.js from CDN');
+    }
+    
     console.log('[ROBOPTIXX] ✓ Three.js loaded');
-
-    // Load Ammo.js WASM
-    const AmmoModule = await import(CDN_URLS.AMMO_WASM);
-    const AmmoFactory = AmmoModule.default || AmmoModule;
-    Ammo = await AmmoFactory();
-    if (!Ammo) throw new Error('Failed to initialize Ammo.js');
-    console.log('[ROBOPTIXX] ✓ Ammo.js WASM loaded');
-
-    return { THREE, Ammo };
+    console.log('[ROBOPTIXX] ✓ Ammo.js loaded');
+    
+    return { THREE: window.THREE, Ammo: window.Ammo };
   } catch (error) {
     console.error('[ROBOPTIXX] Cloud environment initialization failed:', error);
     throw error;
@@ -36,14 +39,14 @@ export async function initCloudEnvironment() {
 
 export async function loadThreeControls() {
   try {
-    const [OrbitModule, TransformModule] = await Promise.all([
-      import(CDN_URLS.THREE_ORBIT),
-      import(CDN_URLS.THREE_TRANSFORM)
-    ]);
+    // OrbitControls and TransformControls are attached by script tags
+    if (!window.OrbitControls || !window.TransformControls) {
+      throw new Error('THREE.js controls not loaded');
+    }
     
     return {
-      OrbitControls: OrbitModule.OrbitControls || OrbitModule.default.OrbitControls,
-      TransformControls: TransformModule.TransformControls || TransformModule.default.TransformControls
+      OrbitControls: window.OrbitControls,
+      TransformControls: window.TransformControls
     };
   } catch (error) {
     console.error('[ROBOPTIXX] Failed to load Three.js controls:', error);
