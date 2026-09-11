@@ -1,6 +1,5 @@
 import { THREE } from './cloud-imports.js';
 import { saveProject, loadProject, listProjects, exportProjectJSON, importProjectJSON } from './storage.js';
-const { Euler } = THREE;
 
 export class ProjectManager {
   constructor(robot, partsSystem, jointSystem, codeGenerator) {
@@ -69,7 +68,7 @@ export class ProjectManager {
             p.mesh.scale.set(pd.transform.scale.x, pd.transform.scale.y, pd.transform.scale.z);
           }
           if (pd.transform.rotation) {
-            const euler = new Euler(pd.transform.rotation.x, pd.transform.rotation.y, pd.transform.rotation.z);
+            const euler = new THREE.Euler(pd.transform.rotation.x, pd.transform.rotation.y, pd.transform.rotation.z);
             p.mesh.quaternion.setFromEuler(euler);
             p.transform.rotation = euler;
           }

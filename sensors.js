@@ -1,15 +1,22 @@
 import { THREE } from './cloud-imports.js';
 
-const DIRECTIONS_8 = [
-  new THREE.Vector3(0, 0, -1),
-  new THREE.Vector3(1, 0, -1).normalize(),
-  new THREE.Vector3(1, 0, 0),
-  new THREE.Vector3(1, 0, 1).normalize(),
-  new THREE.Vector3(0, 0, 1),
-  new THREE.Vector3(-1, 0, 1).normalize(),
-  new THREE.Vector3(-1, 0, 0),
-  new THREE.Vector3(-1, 0, -1).normalize()
-];
+let DIRECTIONS_8 = null;
+
+function getDirections8() {
+  if (!DIRECTIONS_8) {
+    DIRECTIONS_8 = [
+      new THREE.Vector3(0, 0, -1),
+      new THREE.Vector3(1, 0, -1).normalize(),
+      new THREE.Vector3(1, 0, 0),
+      new THREE.Vector3(1, 0, 1).normalize(),
+      new THREE.Vector3(0, 0, 1),
+      new THREE.Vector3(-1, 0, 1).normalize(),
+      new THREE.Vector3(-1, 0, 0),
+      new THREE.Vector3(-1, 0, -1).normalize()
+    ];
+  }
+  return DIRECTIONS_8;
+}
 
 export class SensorSystem {
   constructor(robot) {
@@ -38,7 +45,7 @@ export class SensorSystem {
 
   readLaserOdometry(part, maxDistance = 8) {
     const origin = part.mesh.position;
-    const distances = DIRECTIONS_8.map((dir) => {
+    const distances = getDirections8().map((dir) => {
       let nearest = maxDistance;
       this.robot.parts.forEach((other) => {
         if (other.id === part.id) return;
