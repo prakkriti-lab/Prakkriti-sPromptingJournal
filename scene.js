@@ -6,19 +6,25 @@ export class SceneSystem {
   constructor(canvas, robot) {
     this.canvas = canvas;
     this.robot = robot;
-    this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(60, 1, 0.1, 1000);
-    this.camera.position.set(6, 6, 6);
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    this.scene = null;
+    this.camera = null;
+    this.renderer = null;
+    this.raycaster = null;
     this.controls = null;
     this.transformControls = null;
-    this.raycaster = new THREE.Raycaster();
     this.pointer = { x: 0, y: 0 };
     this.selected = [];
-    this._bindResize();
   }
 
   async init() {
+    // NOW THREE is guaranteed to be available
+    this.scene = new THREE.Scene();
+    this.camera = new THREE.PerspectiveCamera(60, 1, 0.1, 1000);
+    this.camera.position.set(6, 6, 6);
+    this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+    this.raycaster = new THREE.Raycaster();
+    this._bindResize();
+    
     const controls = await loadThreeControls();
     OrbitControls = controls.OrbitControls;
     TransformControls = controls.TransformControls;
