@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>ROBOPTIXX</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; background: #1a1410; font-family: monospace; }
+    #main { display: flex; width: 100%; height: 100%; }
+    canvas { display: block; background: #FFFFFF; flex: 1; }
+    #sidebar { width: 400px; background: #1a1410; border-left: 3px solid #FF8C00; overflow-y: auto; padding: 15px; }
+    h2 { color: #FFD700; margin: 15px 0 10px 0; font-size: 12px; border-bottom: 2px solid #FF7F50; padding-bottom: 6px; }
+    .tabs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin: 10px 0; }
+    .tab { padding: 8px; background: #2a2015; border: 2px solid #A0522D; color: #FFE4B5; cursor: pointer; border-radius: 3px; font-size: 9px; }
+    .tab.on { background: #FF8C00; border-color: #FFD700; color: #1a1410; font-weight: bold; }
+    .panel { display: none; }
+    .panel.on { display: block; }
+    button { width: 100%; padding: 8px; margin: 4px 0; background: #FF8C00; color: #1a1410; border: none; cursor: pointer; font-weight: bold; border-radius: 3px; }
+    button:hover { background: #FFA500; }
+    button.active { background: #FF4444; }
+    button.danger { background: #DC143C; }
+    .cat-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin: 8px 0; }
+    .cat-btn { padding: 6px; background: #2a2015; border: 1px solid #A0522D; color: #FFE4B5; cursor: pointer; border-radius: 3px; font-size: 9px; }
+    .cat-btn.on { background: #FF8C00; border-color: #FFD700; color: #1a1410; }
+    .gallery { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin: 8px 0; }
+    .part-btn { padding: 8px; background: #2a2015; border: 1px solid #A0522D; color: #FFE4B5; cursor: pointer; border-radius: 3px; font-size: 8px; }
+    .part-btn:hover { background: #3d2817; border-color: #FF8C00; }
+    .list { max-height: 120px; overflow-y: auto; background: #2a2015; border: 1px solid #A0522D; padding: 5px; margin: 5px 0; }
+    .item { background: #3d2817; padding: 5px; margin: 3px 0; border-left: 3px solid #2E8B57; font-size: 8px; color: #FFE4B5; cursor: pointer; }
+    .item.sel { background: #FF8C00; color: #1a1410; border-left-color: #FFD700; }
+    textarea { width: 100%; height: 180px; background: #2a2015; color: #FFD700; border: 1px solid #FF8C00; padding: 8px; font-family: monospace; font-size: 9px; }
+  </style>
+</head>
+<body>
+  <div id="main">
+    <canvas id="canvas"></canvas>
+    <div id="sidebar">
+      <h2>🤖 ROBOPTIXX</h2>
+      <div class="tabs">
+        <div class="tab on" onclick="switchTab('build')">⚙️ BUILD</div>
+        <div class="tab" onclick="switchTab('rig')">🔗 RIG</div>
+        <div class="tab" onclick="switchTab('code')">💾 CODE</div>
+      </div>
+      
+      <div id="build" class="panel on">
+        <h2>📦 Parts</h2>
+        <div class="cat-btns" id="catButtons"></div>
+        <div id="gallery" class="gallery"></div>
+        <button class="danger" onclick="delPart()">Delete</button>
+      </div>
+      
+      <div id="rig" class="panel">
+        <h2>🔗 Rigging</h2>
+        <button id="rigBtn" onclick="rigMode()">Start Rig</button>
+        <div style="background:rgba(46,139,87,0.2);padding:8px;margin:8px 0;border-left:3px solid #2E8B57;font-size:9px;color:#FFE4B5" id="rigInfo">Select 2 parts</div>
+        <h2>Joints</h2>
+        <div id="joints" class="list"></div>
+        <h2>Record</h2>
+        <button id="recBtn" onclick="toggleRec()">Record</button>
+        <div style="background:rgba(46,139,87,0.2);padding:8px;margin:8px 0;border-left:3px solid #2E8B57;font-size:9px;color:#FFE4B5" id="recInfo">Not recording</div>
+        <button onclick="expRig()">Export</button>
+      </div>
+      
+      <div id="code" class="panel">
+        <h2>💾 Export</h2>
+        <button onclick="expCpp()">Arduino</button>
+        <button onclick="expMath()">Math</button>
+        <button onclick="expJson()">JSON</button>
+        <h2>Output</h2>
+        <textarea id="out" readonly></textarea>
+        <button onclick="copy()">Copy</button>
+        <button onclick="dl()">Download</button>
+      </div>
+      
+      <h2>Selected</h2>
+      <div style="background:rgba(46,139,87,0.2);padding:8px;margin:8px 0;border-left:3px solid #2E8B57;font-size:9px;color:#FFE4B5" id="info">Click part</div>
+      <div style="background:rgba(46,139,87,0.2);padding:8px;margin:8px 0;border-left:3px solid #2E8B57;font-size:9px;color:#FFE4B5" id="stats">0 parts | 0 joints</div>
+      <button class="danger" onclick="clear()">Clear All</button>
+    </div>
+  </div>
+
+  <script>
+    const c = document.getElementById('canvas');
+    const ctx = c.getContext('2d');
+    let parts = [], joints = [], sel = null;
+    let rigMode = false, rigSel = [];
+    let recording = false, frames = [];
+    
+    const partLibrary = {
+      cores: ['Anchor_Hook', 'Spade'],
+      limbs: ['Lifting_Limb', 'Running_Limb', 'Hilly_Region_Limb', 'Crew_Limb', 'Spider_Limb', 'Clawed_Limb', 'Paddle_Limb', 'Screw_Limb'],
+      joints: ['Rolling_Hinge', 'Gear_Axle', 'Wheel_Roller'],
+      cushioning: ['Cushioning_Roller_2'],
+      sensors: ['Distance_Sensor', 'Gyro_Sensor', 'Pressure_Sensor'],
+      tools: ['Cartwheel', 'Airshot']
+    };
+    
+    let currentCat = 'limbs';
+
+    class Part {
+      constructor(x, y, name) {
+        this.id = Math.random();
+        this.x = x;
+        this.y = y;
+        this.name = name;
+        this.w = 60;
+        this.h = 60;
+      }
+      
+      draw(s) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.fillStyle = s ? '#FF4444' : '#FF7F50';
+        ctx.strokeStyle = s ? '#FFD700' : '#FF8C00';
+        ctx.lineWidth = 2;
+        ctx.fillRect(-this.w/2, -this.h/2, this.w, this.h);
+        ctx.strokeRect(-this.w/2, -this.h/2, this.w, this.h);
+        if (s) {
+          ctx.strokeStyle = '#FFD700';
+          ctx.lineWidth = 3;
+          ctx.strokeRect(-this.w/2 - 4, -this.h/2 - 4, this.w + 8, this.h + 8);
+        }
+        ctx.restore();
+      }
+      
+      hit(x, y) {
+        return x > this.x - this.w/2 && x < this.x + this.w/2 && y > this.y - this.h/2 && y < this.y + this.h/2;
+      }
+    }
+
+    function initGallery() {
+      const catButtons = document.getElementById('catButtons');
+      let html = '';
+      for (let cat in partLibrary) {
+        html += `<button class="cat-btn${cat === currentCat ? ' on' : ''}" onclick="showCat('${cat}')">${cat.toUpperCase()}</button>`;
+      }
+      catButtons.innerHTML = html;
+      showCat('limbs');
+    }
+
+    function showCat(cat) {
+      currentCat = cat;
+      document.querySelectorAll('.cat-btn').forEach(e => e.classList.remove('on'));
+      if (event) event.target.classList.add('on');
+      
+      const gallery = document.getElementById('gallery');
+      gallery.innerHTML = '';
+      
+      partLibrary[cat].forEach(name => {
+        const btn = document.createElement('button');
+        btn.className = 'part-btn';
+        btn.innerHTML = name.replace(/_/g, ' ');
+        btn.onclick = () => addPart(name);
+        gallery.appendChild(btn);
+      });
+    }
+
+    function addPart(name) {
+      parts.push(new Part(c.width/3 + Math.random()*80, 80 + parts.length*70, name));
+      ui();
+      render();
+    }
+
+    function delPart() {
+      if (!sel) return;
+      parts = parts.filter(p => p !== sel);
+      joints = joints.filter(j => j.a !== sel && j.b !== sel);
+      sel = null;
+      ui();
+      render();
+    }
+
+    function clear() {
+      if (confirm('Clear?')) {
+        parts = [];
+        joints = [];
+        sel = null;
+        rigMode = false;
+        rigSel = [];
+        frames = [];
+        ui();
+        render();
+      }
+    }
+
+    function switchTab(t) {
+      document.querySelectorAll('.panel').forEach(e => e.classList.remove('on'));
+      document.querySelectorAll('.tab').forEach(e => e.classList.remove('on'));
+      document.getElementById(t).classList.add('on');
+      if (event) event.target.classList.add('on');
+    }
+
+    function rigMode() {
+      rigMode = !rigMode;
+      rigSel = [];
+      document.getElementById('rigBtn').className = rigMode ? 'active' : '';
+      ui();
+    }
+
+    function toggleRec() {
+      recording = !recording;
+      if (recording) {
+        frames = [];
+        document.getElementById('recBtn').textContent = '⏹️ Stop';
+      } else {
+        document.getElementById('recBtn').textContent = 'Record';
+        document.getElementById('recInfo').textContent = `Recorded ${frames.length} frames`;
+      }
+    }
+
+    function ui() {
+      let h = '';
+      parts.forEach((p, i) => {
+        h += `<div class="item${p === sel ? ' sel' : ''}" onclick="selPart(${i})">${i+1}. ${p.name}</div>`;
+      });
+      const l = document.getElementById('joints');
+      if (l) l.innerHTML = h || '<div style="padding:5px">No parts</div>';
+
+      h = '';
+      joints.forEach((j, i) => {
+        const a = parts.indexOf(j.a);
+        const b = parts.indexOf(j.b);
+        h += `<div class="item">J${i+1}: P${a+1}↔P${b+1}</div>`;
+      });
+      document.getElementById('joints').innerHTML = h || '<div style="padding:5px">No joints</div>';
+
+      if (sel) {
+        document.getElementById('info').textContent = `${sel.name}\nPos: (${sel.x.toFixed(0)}, ${sel.y.toFixed(0)})`;
+      }
+
+      document.getElementById('stats').textContent = `${parts.length} parts | ${joints.length} joints`;
+    }
+
+    function selPart(i) {
+      sel = parts[i];
+      ui();
+      render();
+    }
+
+    function render() {
+      if (recording) frames.push({parts: parts.map(p => ({x: p.x, y: p.y})), t: Date.now()});
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, c.width, c.height);
+
+      ctx.strokeStyle = '#DDD';
+      ctx.lineWidth = 0.8;
+      for (let i = 0; i < c.width; i += 50) {
+        ctx.beginPath();
+        ctx.moveTo(i, 0);
+        ctx.lineTo(i, c.height);
+        ctx.stroke();
+      }
+
+      ctx.strokeStyle = '#2E8B57';
+      ctx.lineWidth = 3;
+      joints.forEach(j => {
+        ctx.beginPath();
+        ctx.moveTo(j.a.x, j.a.y);
+        ctx.lineTo(j.b.x, j.b.y);
+        ctx.stroke();
+      });
+
+      parts.forEach(p => p.draw(p === sel));
+
+      if (rigMode && rigSel.length > 0) {
+        ctx.strokeStyle = '#FFD700';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 5]);
+        rigSel.forEach(p => {
+          ctx.strokeRect(p.x - p.w/2 - 4, p.y - p.h/2 - 4, p.w + 8, p.h + 8);
+        });
+        ctx.setLineDash([]);
+      }
+    }
+
+    c.addEventListener('click', e => {
+      const r = c.getBoundingClientRect();
+      const x = e.clientX - r.left;
+      const y = e.clientY - r.top;
+
+      for (let i = parts.length - 1; i >= 0; i--) {
+        if (parts[i].hit(x, y)) {
+          if (rigMode) {
+            if (rigSel.includes(parts[i])) {
+              rigSel = rigSel.filter(p => p !== parts[i]);
+            } else {
+              rigSel.push(parts[i]);
+              if (rigSel.length === 2) {
+                joints.push({a: rigSel[0], b: rigSel[1]});
+                rigSel = [];
+                rigMode = false;
+                document.getElementById('rigBtn').className = '';
+              }
+            }
+          } else {
+            sel = parts[i];
+          }
+          ui();
+          render();
+          return;
+        }
+      }
+      sel = null;
+      ui();
+      render();
+    });
+
+    c.addEventListener('mousemove', e => {
+      if (sel && !rigMode) {
+        const r = c.getBoundingClientRect();
+        sel.x = e.clientX - r.left;
+        sel.y = e.clientY - r.top;
+        render();
+      }
+    });
+
+    function expRig() {
+      const d = {
+        parts: parts.map((p, i) => ({id: i, name: p.name, x: p.x, y: p.y})),
+        joints: joints.map(j => ({a: parts.indexOf(j.a), b: parts.indexOf(j.b)}))
+      };
+      document.getElementById('out').value = JSON.stringify(d, null, 2);
+    }
+
+    function expCpp() {
+      let code = `#include <Servo.h>\n\n`;
+      parts.forEach((p, i) => code += `Servo s${i};\n`);
+      code += `\nvoid setup() {\n`;
+      parts.forEach((p, i) => code += `  s${i}.attach(${9+i});\n`);
+      code += `}\n\nvoid loop() {\n}\n`;
+      document.getElementById('out').value = code;
+    }
+
+    function expMath() {
+      let m = `PARTS: ${parts.length}\nJOINTS: ${joints.length}\n\n`;
+      parts.forEach((p, i) => m += `P${i+1}: (${p.x.toFixed(0)}, ${p.y.toFixed(0)})\n`);
+      m += `\n`;
+      joints.forEach((j, i) => {
+        const d = Math.sqrt((j.a.x - j.b.x)**2 + (j.a.y - j.b.y)**2);
+        m += `J${i+1}: ${d.toFixed(1)}px\n`;
+      });
+      document.getElementById('out').value = m;
+    }
+
+    function expJson() {
+      expRig();
+    }
+
+    function copy() {
+      navigator.clipboard.writeText(document.getElementById('out').value);
+      alert('Copied!');
+    }
+
+    function dl() {
+      const t = document.getElementById('out').value;
+      const b = new Blob([t], {type: 'text/plain'});
+      const u = URL.createObjectURL(b);
+      const a = document.createElement('a');
+      a.href = u;
+      a.download = 'roboptixx.txt';
+      a.click();
+    }
+
+    function resizeCanvas() {
+      c.width = window.innerWidth - 400;
+      c.height = window.innerHeight;
+      render();
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+    initGallery();
+    ui();
+    setInterval(render, 1000/60);
+  </script>
+</body>
+</html>
