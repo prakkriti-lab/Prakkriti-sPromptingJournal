@@ -2,98 +2,284 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>ROBOPTIXX - Robot Builder</title>
+  <title>ROBOPTIXX - Robot Assembly & Rigging</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #1a1410; color: #FFE4B5; font-family: monospace; }
-    #main { display: flex; width: 100vw; height: 100vh; }
-    #canvas { flex: 1; background: #2a2015; }
-    #sidebar { width: 280px; background: #1a1410; border-left: 2px solid #FF8C00; overflow-y: auto; padding: 15px; }
-    h2 { color: #FFD700; margin: 15px 0 10px 0; }
-    button { width: 100%; padding: 8px; margin: 5px 0; background: #FF8C00; color: #1a1410; border: none; cursor: pointer; font-weight: bold; }
+    html, body { width: 100%; height: 100%; background: #1a1410; font-family: monospace; }
+    #main { display: flex; width: 100%; height: 100%; }
+    canvas { display: block; background: #FFFFFF; cursor: crosshair; flex: 1; }
+    #sidebar { width: 380px; background: #1a1410; border-left: 3px solid #FF8C00; overflow-y: auto; padding: 15px; flex-shrink: 0; }
+    .mode-tabs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin: 10px 0; }
+    .mode-tab { padding: 8px; background: #2a2015; border: 2px solid #A0522D; color: #FFE4B5; cursor: pointer; border-radius: 3px; font-size: 10px; text-align: center; transition: 0.2s; }
+    .mode-tab.active { background: #FF8C00; border-color: #FFD700; color: #1a1410; font-weight: bold; }
+    .mode-content { display: none; }
+    .mode-content.active { display: block; }
+    h2 { color: #FFD700; margin: 15px 0 10px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #FF7F50; padding-bottom: 6px; }
+    button { width: 100%; padding: 8px; margin: 4px 0; background: #FF8C00; color: #1a1410; border: none; cursor: pointer; font-weight: bold; border-radius: 3px; font-size: 10px; }
     button:hover { background: #FFA500; }
     button.active { background: #FF4444; }
     button.danger { background: #DC143C; }
-    .info { background: rgba(46, 139, 87, 0.2); padding: 10px; margin: 10px 0; border-left: 3px solid #2E8B57; font-size: 10px; }
-    input { width: 100%; padding: 5px; background: #2a2015; color: #FFD700; border: 1px solid #FF8C00; margin: 5px 0; }
-    .part-item { background: #2a2015; padding: 8px; margin: 5px 0; border: 1px solid #A0522D; cursor: pointer; }
-    .part-item:hover { background: #3d2817; border-color: #FF8C00; }
-    .part-item.selected { background: #FF8C00; color: #1a1410; font-weight: bold; }
+    .info { background: rgba(46, 139, 87, 0.2); padding: 10px; margin: 8px 0; border-left: 3px solid #2E8B57; font-size: 9px; color: #FFE4B5; }
+    input[type="file"] { display: none; }
+    .file-input-label { display: block; width: 100%; padding: 10px; background: #2a2015; border: 2px dashed #FF8C00; color: #FFE4B5; text-align: center; cursor: pointer; border-radius: 3px; margin: 5px 0; font-size: 10px; }
+    .file-input-label:hover { border-color: #FFA500; background: #3d2817; }
+    .part-item { background: #2a2015; padding: 8px; margin: 4px 0; border: 1px solid #A0522D; cursor: pointer; border-radius: 3px; color: #FFE4B5; font-size: 9px; }
+    .part-item:hover { border-color: #FF8C00; }
+    .part-item.selected { background: #FF8C00; color: #1a1410; }
+    .rigging-list { max-height: 150px; overflow-y: auto; background: #2a2015; border: 1px solid #A0522D; border-radius: 3px; padding: 5px; margin: 5px 0; }
+    .rigging-item { background: #3d2817; padding: 5px; margin: 3px 0; border-left: 3px solid #2E8B57; font-size: 8px; color: #FFE4B5; }
+    label { display: block; color: #FFE4B5; font-size: 10px; margin-top: 8px; }
+    input[type="number"], input[type="text"], select { width: 100%; padding: 5px; background: #2a2015; color: #FFD700; border: 1px solid #FF8C00; margin: 4px 0; border-radius: 2px; font-family: monospace; font-size: 10px; }
+    textarea { width: 100%; height: 200px; background: #2a2015; color: #FFD700; border: 1px solid #FF8C00; padding: 8px; font-family: monospace; font-size: 9px; }
+    .stats { font-size: 9px; color: #FFE4B5; margin: 5px 0; }
   </style>
 </head>
 <body>
   <div id="main">
     <canvas id="canvas"></canvas>
     <div id="sidebar">
-      <h2>🤖 ROBOPTIXX</h2>
-      <h2>Add Parts</h2>
-      <button onclick="addPart('box')">📦 Cube</button>
-      <button onclick="addPart('circle')">⚪ Circle</button>
-      <button onclick="addPart('rect')">📋 Plate</button>
-      <h2>Rigging</h2>
-      <button id="rigBtn" onclick="toggleRig()">🔗 Start Rig</button>
-      <div class="info" id="rigInfo">Click 2 parts to joint</div>
-      <h2>Parts</h2>
-      <div id="partsList"></div>
+      <h2>🤖 ROBOPTIXX v3.0</h2>
+      <div class="mode-tabs">
+        <div class="mode-tab active" onclick="switchMode('assembly')">⚙️ BUILD</div>
+        <div class="mode-tab" onclick="switchMode('rigging')">🔗 RIG</div>
+        <div class="mode-tab" onclick="switchMode('export')">💾 CODE</div>
+      </div>
+      
+      <div id="assembly-mode" class="mode-content active">
+        <h2>📦 Parts</h2>
+        <label class="file-input-label" onclick="document.getElementById('partFile').click()">➕ Upload Part</label>
+        <input type="file" id="partFile" accept="image/*" onchange="uploadPart()">
+        <div id="partsList" class="rigging-list"></div>
+        <label>Name:</label>
+        <input type="text" id="partName" placeholder="Limb_1">
+        <button onclick="addUploadedPart()">Add Part</button>
+        <button class="danger" onclick="delete_part()">Delete</button>
+      </div>
+      
+      <div id="rigging-mode" class="mode-content">
+        <h2>🔗 Rigging</h2>
+        <button id="rigBtn" onclick="toggleRig()">Start Rig</button>
+        <div class="info" id="rigInfo">Select 2 parts</div>
+        <h2>Joints</h2>
+        <div id="jointsList" class="rigging-list"></div>
+        <h2>Record</h2>
+        <button id="recordBtn" onclick="toggleRecord()">🔴 Record</button>
+        <div class="stats" id="recordInfo">Not recording</div>
+        <button onclick="export_rigging_data()">Export Rig</button>
+      </div>
+      
+      <div id="export-mode" class="mode-content">
+        <h2>💾 Export</h2>
+        <button onclick="export_cpp_code()">Arduino Code</button>
+        <button onclick="export_math_data()">Math Data</button>
+        <button onclick="export_json()">JSON</button>
+        <h2>Output</h2>
+        <textarea id="exportOutput" readonly></textarea>
+        <button onclick="copy_to_clipboard()">Copy</button>
+        <button onclick="download_file()">Download</button>
+      </div>
+      
       <h2>Selected</h2>
-      <div id="info" class="info">Click a part</div>
-      <label>Mass: <input id="mass" type="number" value="1" min="0.1"></label>
-      <button class="danger" onclick="delete_part()">Delete</button>
-      <button class="danger" onclick="clear_all()">Clear All</button>
+      <div id="info" class="info">Click part</div>
+      <div class="stats" id="stats">0 parts | 0 joints</div>
+      <button class="danger" onclick="clear_all()">Clear</button>
     </div>
   </div>
+
   <script>
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
-    let parts = [], joints = [], selected = null, rig = false, rig_sel = [];
+    let parts = [], joints = [], selected = null;
+    let rig = false, rig_sel = [];
+    let recording = false, recordedFrames = [];
+    let uploadedImages = new Map();
+
     class Part {
-      constructor(x, y, type) {
-        this.x = x; this.y = y; this.type = type; this.mass = 1; this.w = 50; this.h = 50; this.r = 25;
+      constructor(x, y, name, imgData = null) {
+        this.id = Math.random();
+        this.x = x; this.y = y; this.name = name;
+        this.mass = 1; this.rotation = 0; this.scale = 1;
+        this.imgData = imgData;
+        this.width = 60; this.height = 60;
       }
       draw(s) {
-        ctx.fillStyle = s ? '#FF4444' : '#FF7F50';
-        ctx.strokeStyle = s ? '#FFD700' : '#FF8C00';
-        ctx.lineWidth = 2;
-        if (this.type === 'box') { ctx.fillRect(this.x-this.w/2, this.y-this.h/2, this.w, this.h); ctx.strokeRect(this.x-this.w/2, this.y-this.h/2, this.w, this.h); }
-        else { ctx.beginPath(); ctx.arc(this.x, this.y, this.r, 0, Math.PI*2); ctx.fill(); ctx.stroke(); }
-        ctx.fillStyle = '#1a1410'; ctx.font = 'bold 10px monospace'; ctx.textAlign = 'center'; ctx.fillText(parts.indexOf(this)+1, this.x, this.y+3);
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.rotation * Math.PI / 180);
+        ctx.scale(this.scale, this.scale);
+        if (this.imgData) {
+          ctx.drawImage(this.imgData, -this.width/2, -this.height/2, this.width, this.height);
+        } else {
+          ctx.fillStyle = s ? '#FF4444' : '#FF7F50';
+          ctx.strokeStyle = s ? '#FFD700' : '#FF8C00';
+          ctx.lineWidth = 2;
+          ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height);
+          ctx.strokeRect(-this.width/2, -this.height/2, this.width, this.height);
+        }
+        if (s) {
+          ctx.strokeStyle = '#FFD700';
+          ctx.lineWidth = 3;
+          ctx.strokeRect(-this.width/2 - 3, -this.height/2 - 3, this.width + 6, this.height + 6);
+        }
+        ctx.restore();
       }
-      hit(x, y) { if (this.type === 'box') return x > this.x-this.w/2 && x < this.x+this.w/2 && y > this.y-this.h/2 && y < this.y+this.h/2; else { const dx=x-this.x, dy=y-this.y; return Math.sqrt(dx*dx+dy*dy) < this.r; }}
+      hit(x, y) {
+        const dx = x - this.x, dy = y - this.y;
+        return dx > -this.width/2 && dx < this.width/2 && dy > -this.height/2 && dy < this.height/2;
+      }
     }
-    function addPart(t) { parts.push(new Part(Math.random()*canvas.width*0.6+100, Math.random()*canvas.height*0.6+100, t)); ui(); render(); }
-    function delete_part() { if (!selected) return; parts = parts.filter(p => p !== selected); joints = joints.filter(j => j.a !== selected && j.b !== selected); selected = null; ui(); render(); }
-    function clear_all() { if (confirm('Clear?')) { parts = []; joints = []; selected = null; rig = false; rig_sel = []; ui(); render(); }}
-    function toggleRig() { rig = !rig; rig_sel = []; document.getElementById('rigBtn').className = rig ? 'active' : ''; ui(); render(); }
+
+    function switchMode(m) {
+      document.querySelectorAll('.mode-content').forEach(e => e.classList.remove('active'));
+      document.querySelectorAll('.mode-tab').forEach(e => e.classList.remove('active'));
+      document.getElementById(m + '-mode').classList.add('active');
+      document.querySelector(`[onclick="switchMode('${m}')"]`).classList.add('active');
+    }
+
+    function uploadPart() {
+      const file = document.getElementById('partFile').files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const id = Math.random().toString(36);
+          uploadedImages.set(id, img);
+          document.getElementById('partsList').innerHTML = Array.from(uploadedImages).map((_, i) => `<div class="part-item">📷 Part ${i+1}</div>`).join('');
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function addUploadedPart() {
+      const name = document.getElementById('partName').value || 'Part_' + parts.length;
+      const img = Array.from(uploadedImages.values()).pop();
+      if (!img) return;
+      const p = new Part(canvas.width/3 + Math.random()*100, 100 + parts.length*70, name, img);
+      parts.push(p);
+      ui(); render();
+    }
+
+    function toggleRig() {
+      rig = !rig; rig_sel = [];
+      document.getElementById('rigBtn').className = rig ? 'active' : '';
+      ui();
+    }
+
+    function toggleRecord() {
+      recording = !recording;
+      if (recording) {
+        recordedFrames = [];
+        document.getElementById('recordBtn').textContent = '⏹️ Stop';
+      } else {
+        document.getElementById('recordBtn').textContent = '🔴 Record';
+        document.getElementById('recordInfo').textContent = `Recorded ${recordedFrames.length} frames`;
+      }
+    }
+
+    function delete_part() {
+      if (!selected) return;
+      parts = parts.filter(p => p !== selected);
+      joints = joints.filter(j => j.a !== selected && j.b !== selected);
+      selected = null;
+      ui(); render();
+    }
+
+    function clear_all() {
+      if (confirm('Clear all?')) {
+        parts = []; joints = []; selected = null; rig = false; rig_sel = []; recordedFrames = [];
+        ui(); render();
+      }
+    }
+
     function ui() {
-      let html = ''; parts.forEach((p, i) => { html += `<div class="part-item${p===selected?' selected':''}" onclick="select_part(${i})">${i+1}. ${p.type} (${p.mass}kg)</div>`; });
-      document.getElementById('partsList').innerHTML = html;
-      if (selected) { document.getElementById('info').textContent = `${selected.type}\nMass: ${selected.mass}kg\nJoints: ${joints.filter(j => j.a===selected || j.b===selected).length}`; }
-      else { document.getElementById('info').textContent = 'Click a part'; }
-      if (rig) { document.getElementById('rigInfo').textContent = `Selected: ${rig_sel.length}/2`; }
+      let html = '';
+      parts.forEach((p, i) => {
+        html += `<div class="part-item${p===selected?' selected':''}" onclick="select_part(${i})">${i+1}. ${p.name}</div>`;
+      });
+      document.getElementById('partsList').innerHTML = html || '<div class="info">No parts</div>';
+
+      html = '';
+      joints.forEach((j, i) => {
+        const a = parts.indexOf(j.a);
+        const b = parts.indexOf(j.b);
+        html += `<div class="rigging-item">Joint ${i+1}: P${a+1}↔P${b+1}</div>`;
+      });
+      document.getElementById('jointsList').innerHTML = html || '<div class="info">No joints</div>';
+
+      if (selected) {
+        document.getElementById('info').textContent = `${selected.name}\nPos: (${selected.x.toFixed(0)}, ${selected.y.toFixed(0)})`;
+      }
+
+      document.getElementById('stats').textContent = `${parts.length} parts | ${joints.length} joints`;
+      if (rig) document.getElementById('rigInfo').textContent = `Selected: ${rig_sel.length}/2`;
     }
-    function select_part(i) { selected = parts[i]; document.getElementById('mass').value = selected.mass; ui(); render(); }
+
+    function select_part(i) {
+      selected = parts[i];
+      ui(); render();
+    }
+
     function render() {
-      ctx.fillStyle = '#1a1410'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.strokeStyle = 'rgba(255,140,0,0.1)'; ctx.lineWidth = 1;
-      for (let i=0; i<canvas.width; i+=50) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,canvas.height); ctx.stroke(); }
-      ctx.strokeStyle = '#2E8B57'; ctx.lineWidth = 2;
-      joints.forEach(j => { ctx.beginPath(); ctx.moveTo(j.a.x,j.a.y); ctx.lineTo(j.b.x,j.b.y); ctx.stroke(); });
+      if (recording && rig_sel.length > 0) {
+        recordedFrames.push({
+          parts: parts.map(p => ({x:p.x, y:p.y, rot:p.rotation})),
+          time: Date.now()
+        });
+      }
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.strokeStyle = '#E8E8E8';
+      ctx.lineWidth = 0.8;
+      for (let i=0; i<canvas.width; i+=50) {
+        ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,canvas.height); ctx.stroke();
+      }
+
+      ctx.strokeStyle = '#2E8B57';
+      ctx.lineWidth = 3;
+      joints.forEach(j => {
+        ctx.beginPath();
+        ctx.moveTo(j.a.x, j.a.y);
+        ctx.lineTo(j.b.x, j.b.y);
+        ctx.stroke();
+      });
+
       parts.forEach(p => p.draw(p === selected));
-      if (rig && rig_sel.length > 0) { ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 2; ctx.setLineDash([5,5]); rig_sel.forEach(p => { ctx.beginPath(); ctx.arc(p.x, p.y, p.r+5, 0, Math.PI*2); ctx.stroke(); }); ctx.setLineDash([]); }
+
+      if (rig && rig_sel.length > 0) {
+        ctx.strokeStyle = '#FFD700';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5,5]);
+        rig_sel.forEach(p => {
+          ctx.strokeRect(p.x-p.width/2-5, p.y-p.height/2-5, p.width+10, p.height+10);
+        });
+        ctx.setLineDash([]);
+      }
     }
+
     canvas.addEventListener('click', (e) => {
-      const r = canvas.getBoundingClientRect(), x = e.clientX-r.left, y = e.clientY-r.top;
+      const r = canvas.getBoundingClientRect();
+      const x = e.clientX - r.left;
+      const y = e.clientY - r.top;
+
       for (let i=parts.length-1; i>=0; i--) {
         if (parts[i].hit(x, y)) {
           if (rig) {
             if (rig_sel.includes(parts[i])) rig_sel = rig_sel.filter(p => p !== parts[i]);
             else {
               rig_sel.push(parts[i]);
-              if (rig_sel.length === 2) { joints.push({a: rig_sel[0], b: rig_sel[1]}); rig_sel = []; rig = false; document.getElementById('rigBtn').className = ''; }
+              if (rig_sel.length === 2) {
+                joints.push({a: rig_sel[0], b: rig_sel[1]});
+                rig_sel = [];
+                rig = false;
+                document.getElementById('rigBtn').className = '';
+              }
             }
           } else {
             selected = parts[i];
-            document.getElementById('mass').value = parts[i].mass;
           }
           ui(); render();
           return;
@@ -101,6 +287,7 @@
       }
       selected = null; ui(); render();
     });
+
     canvas.addEventListener('mousemove', (e) => {
       if (selected && !rig) {
         const r = canvas.getBoundingClientRect();
@@ -109,13 +296,98 @@
         render();
       }
     });
-    document.getElementById('mass').addEventListener('change', () => {
-      if (selected) { selected.mass = parseFloat(document.getElementById('mass').value) || 1; if (selected.mass <= 0) selected.mass = 0.1; ui(); }
-    });
-    function resizeCanvas() { canvas.width = window.innerWidth - 280; canvas.height = window.innerHeight; render(); }
+
+    function export_rigging_data() {
+      const data = {
+        parts: parts.map((p, i) => ({id:i, name:p.name, x:p.x, y:p.y})),
+        joints: joints.map(j => ({a:parts.indexOf(j.a), b:parts.indexOf(j.b)}))
+      };
+      document.getElementById('exportOutput').value = JSON.stringify(data, null, 2);
+    }
+
+    function export_cpp_code() {
+      let code = `// ROBOPTIXX Arduino Code\n#include <Servo.h>\n\n`;
+      parts.forEach((p, i) => code += `Servo s${i}; // ${p.name}\n`);
+      code += `\nvoid setup() { `;
+      parts.forEach((p, i) => code += `s${i}.attach(${9+i}); `);
+      code += `}\n\nvoid loop() { }\n`;
+      document.getElementById('exportOutput').value = code;
+    }
+
+    function export_math_data() {
+      let m = `KINEMATICS\n${'='.repeat(40)}\n\nParts: ${parts.length}\nJoints: ${joints.length}\n\nPositions:\n`;
+      parts.forEach((p, i) => m += `P${i+1}: (${p.x.toFixed(0)}, ${p.y.toFixed(0)})\n`);
+      m += `\nJoint Distances:\n`;
+      joints.forEach((j, i) => {
+        const d = Math.sqrt(Math.pow(j.a.x-j.b.x, 2) + Math.pow(j.a.y-j.b.y, 2));
+        m += `J${i+1}: ${d.toFixed(1)}px\n`;
+      });
+      document.getElementById('exportOutput').value = m;
+    }
+
+    function export_json() { export_rigging_data(); }
+
+    function copy_to_clipboard() {
+      navigator.clipboard.writeText(document.getElementById('exportOutput').value);
+      alert('✅ Copied!');
+    }
+
+    function download_file() {
+      const text = document.getElementById('exportOutput').value;
+      const blob = new Blob([text], {type: 'text/plain'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'roboptixx.txt';
+      a.click();
+    }
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth - 380;
+      canvas.height = window.innerHeight;
+      render();
+    }
+
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
     ui();
+    setInterval(render, 1000/60);
   </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+="part-item${p===selected?' selected':''}" onclick="select_part(${i})">${i+1}. ${p.type} (${p.mass}kg)</div>`; 
