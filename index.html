@@ -2,61 +2,369 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>ROBOPTIXX - Robot Assembly & Rigging</title>
+  <title>ROBOPTIXX</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; background: #1a1410; font-family: monospace; }
+    html, body { width: 100%; height: 100%; background: #1a1410; font-family: monospace; overflow: hidden; }
     #main { display: flex; width: 100%; height: 100%; }
-    
-    canvas { background: #FFFFFF; flex: 1; cursor: crosshair; }
-    
-    #sidebar { 
-      width: 350px; 
-      background: #1a1410; 
-      border-left: 3px solid #FF8C00; 
-      overflow-y: auto; 
-      padding: 15px;
-    }
-    
-    .mode-tabs {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 5px;
-      margin: 10px 0 15px 0;
-    }
-    
-    .mode-tab {
-      padding: 8px;
-      background: #2a2015;
-      border: 2px solid #A0522D;
-      color: #FFE4B5;
-      cursor: pointer;
-      border-radius: 3px;
-      font-size: 10px;
-      text-align: center;
-      font-weight: bold;
-    }
-    
-    .mode-tab.active {
-      background: #FF8C00;
-      border-color: #FFD700;
-      color: #1a1410;
-    }
-    
+    canvas { background: white; flex: 1; display: block; }
+    #sidebar { width: 350px; background: #1a1410; border-left: 3px solid #FF8C00; overflow-y: auto; padding: 15px; }
+    h2 { color: #FFD700; margin: 15px 0 8px 0; font-size: 11px; }
+    button { width: 100%; padding: 8px; margin: 5px 0; background: #FF8C00; color: #1a1410; border: none; cursor: pointer; font-weight: bold; }
+    button:hover { background: #FFA500; }
+    button.danger { background: #DC143C; }
+    button.active { background: #FF4444; }
+    .mode-tabs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin: 10px 0 15px 0; }
+    .mode-tab { padding: 8px; background: #2a2015; border: 2px solid #A0522D; color: #FFE4B5; cursor: pointer; font-size: 10px; text-align: center; }
+    .mode-tab.active { background: #FF8C00; border-color: #FFD700; color: #1a1410; }
     .mode-content { display: none; }
     .mode-content.active { display: block; }
-    
-    h2 { color: #FFD700; margin: 15px 0 8px 0; font-size: 11px; border-bottom: 1px solid #FF7F50; padding-bottom: 5px; }
-    
-    button { 
-      width: 100%; 
-      padding: 8px; 
-      margin: 5px 0; 
-      background: #FF8C00; 
-      color: #1a1410; 
-      border: none; 
-      cursor: pointer; 
-      font-weight: bold;
-      border-radius: 3px;
-      font-size: 11px;
+    .file-input-label { display: block; width: 100%; padding: 10px; background: #2a2015; border: 2px dashed #FF8C00; color: #FFE4B5; text-align: center; cursor: pointer; margin: 5px 0; }
+    input[type="file"] { display: none; }
+    input[type="text"], input[type="number"] { width: 100%; padding: 5px; margin: 5px 0; background: #2a2015; color: #FFD700; border: 1px solid #FF8C00; }
+    label { color: #FFE4B5; font-size: 10px; display: block; margin-top: 8px; }
+    .info { background: #2a2015; padding: 8px; margin: 8px 0; border-left: 2px solid #FF8C00; color: #FFE4B5; font-size: 9px; }
+    .part-box { background: #2a2015; padding: 8px; margin: 5px 0; border: 1px solid #A0522D; color: #FFE4B5; font-size: 9px; cursor: pointer; }
+    .part-box.selected { background: #FF8C00; color: #1a1410; }
+    .joint-box { background: #3d2817; padding: 8px; margin: 5px 0; border-left: 3px solid #2E8B57; color: #FFE4B5; font-size: 9px; }
+    textarea { width: 100%; height: 150px; background: #2a2015; color: #FFD700; border: 1px solid #FF8C00; padding: 8px; font-family: monospace; font-size: 9px; }
+  </style>
+</head>
+<body>
+  <div id="main">
+    <canvas id="canvas"></canvas>
+    <div id="sidebar">
+      <h2>🤖 ROBOPTIXX</h2>
+      
+      <div class="mode-tabs">
+        <div class="mode-tab active" onclick="switchMode('assembly')">⚙️ BUILD</div>
+        <div class="mode-tab" onclick="switchMode('rigging')">🔗 RIG</div>
+        <div class="mode-tab" onclick="switchMode('export')">💾 CODE</div>
+      </div>
+      
+      <div id="assembly-mode" class="mode-content active">
+        <h2>📷 Upload Image</h2>
+        <label class="file-input-label" onclick="document.getElementById('imageFile').click()">➕ Choose Image</label>
+        <input type="file" id="imageFile" accept="image/*" onchange="uploadImage()">
+        
+        <h2>📋 Part Info</h2>
+        <label>Name:</label>
+        <input type="text" id="partName" placeholder="e.g. Limb_1">
+        <label>Type:</label>
+        <select id="partType" style="width:100%; padding:5px; background:#2a2015; color:#FFD700; border:1px solid #FF8C00; margin:5px 0;">
+          <option>Limb</option><option>Joint</option><option>Core</option><option>Wheel</option>
+        </select>
+        <button onclick="addPart()">Add Part</button>
+        
+        <h2>📦 Parts</h2>
+        <div id="partsList" class="info">No parts</div>
+        
+        <h2>📐 Size</h2>
+        <label>Width:</label>
+        <input type="number" id="widthInput" value="300" onchange="updateSize()">
+        <label>Height:</label>
+        <input type="number" id="heightInput" value="400" onchange="updateSize()">
+        <button class="danger" onclick="deleteSelected()">Delete</button>
+      </div>
+      
+      <div id="rigging-mode" class="mode-content">
+        <h2>🔗 Rigging</h2>
+        <button id="rigBtn" onclick="toggleRig()">Start Rig</button>
+        <div class="info" id="rigInfo">Select 2 parts</div>
+        
+        <h2>📌 Joints</h2>
+        <div id="jointsList" class="info">No joints</div>
+        
+        <h2>🎬 Record</h2>
+        <button id="recordBtn" onclick="toggleRecord()">🔴 Record</button>
+        <div class="info" id="recordInfo">Not recording</div>
+      </div>
+      
+      <div id="export-mode" class="mode-content">
+        <h2>💾 Export</h2>
+        <button onclick="exportCPP()">Arduino C++</button>
+        <button onclick="exportMath()">Kinematics</button>
+        <button onclick="exportJSON()">JSON</button>
+        
+        <h2>Output</h2>
+        <textarea id="exportOutput" readonly></textarea>
+        
+        <button onclick="copyToClipboard()">Copy</button>
+        <button onclick="downloadFile()">Download</button>
+      </div>
+      
+      <h2>ℹ️ Info</h2>
+      <div id="info" class="info">Click a part</div>
+      <div id="stats" class="info">0 parts</div>
+      <button class="danger" onclick="clearAll()">Clear All</button>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let parts = [], joints = [], selected = null, uploadedImage = null;
+    let rigMode = false, rigSelected = [], recording = false, recordedFrames = [];
+
+    class Part {
+      constructor(x, y, name, type, img) {
+        this.x = x; this.y = y; this.name = name; this.type = type;
+        this.width = 300; this.height = 400; this.image = img;
+      }
+      draw(sel) {
+        ctx.save(); ctx.translate(this.x, this.y);
+        if (this.image) ctx.drawImage(this.image, -this.width/2, -this.height/2, this.width, this.height);
+        else {
+          ctx.fillStyle = sel ? '#FF4444' : '#FF7F50';
+          ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height);
+        }
+        ctx.strokeStyle = sel ? '#FFD700' : '#FF8C00';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(-this.width/2, -this.height/2, this.width, this.height);
+        if (!this.image && !sel) {
+          ctx.fillStyle = '#1a1410'; ctx.font = 'bold 14px monospace';
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText(this.name, 0, 0);
+        }
+        if (sel) {
+          ctx.fillStyle = '#FFD700';
+          ctx.fillRect(this.width/2-8, this.height/2-8, 16, 16);
+          ctx.font = 'bold 10px monospace'; ctx.textAlign = 'center';
+          ctx.fillText(`${Math.round(this.width)}x${Math.round(this.height)}`, 0, -this.height/2-15);
+        }
+        if (rigSelected.includes(this)) {
+          ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 2; ctx.setLineDash([5,5]);
+          ctx.strokeRect(-this.width/2-5, -this.height/2-5, this.width+10, this.height+10);
+          ctx.setLineDash([]);
+        }
+        ctx.restore();
+      }
+      hit(x, y) {
+        return Math.abs(x-this.x) < this.width/2 && Math.abs(y-this.y) < this.height/2;
+      }
     }
+
+    function switchMode(m) {
+      document.querySelectorAll('.mode-content').forEach(e => e.classList.remove('active'));
+      document.querySelectorAll('.mode-tab').forEach(e => e.classList.remove('active'));
+      document.getElementById(m+'-mode').classList.add('active');
+      event.target.classList.add('active');
+      render();
+    }
+
+    function uploadImage() {
+      const f = document.getElementById('imageFile').files[0];
+      if (!f) return;
+      const r = new FileReader();
+      r.onload = e => {
+        const img = new Image();
+        img.onload = () => uploadedImage = img;
+        img.src = e.target.result;
+      };
+      r.readAsDataURL(f);
+    }
+
+    function addPart() {
+      if (!uploadedImage) { alert('Upload image'); return; }
+      const p = new Part(canvas.width/3 + Math.random()*150, 100+parts.length*100,
+        document.getElementById('partName').value || 'Part_'+parts.length,
+        document.getElementById('partType').value, uploadedImage);
+      parts.push(p); selected = p; updateUI(); render();
+    }
+
+    function toggleRig() {
+      rigMode = !rigMode; rigSelected = [];
+      document.getElementById('rigBtn').className = rigMode ? 'active' : '';
+      updateUI(); render();
+    }
+
+    function toggleRecord() {
+      recording = !recording;
+      if (recording) {
+        recordedFrames = [];
+        document.getElementById('recordBtn').textContent = '⏹️ Stop';
+        document.getElementById('recordInfo').textContent = 'Recording: 0 frames';
+      } else {
+        document.getElementById('recordBtn').textContent = '🔴 Record';
+        document.getElementById('recordInfo').textContent = `Recorded: ${recordedFrames.length} frames`;
+      }
+    }
+
+    function updateUI() {
+      let h = ''; parts.forEach((p,i) => {
+        h += `<div class="part-box${p===selected?' selected':''}" onclick="selectPart(${i})">${i+1}. ${p.name}</div>`;
+      });
+      document.getElementById('partsList').innerHTML = h || 'No parts';
+      
+      h = ''; joints.forEach((j,i) => {
+        const p1 = parts.indexOf(j.p1), p2 = parts.indexOf(j.p2);
+        h += `<div class="joint-box">Joint ${i+1}: Part${p1+1}↔Part${p2+1}</div>`;
+      });
+      document.getElementById('jointsList').innerHTML = h || 'No joints';
+      
+      if (selected) {
+        document.getElementById('info').textContent = `${selected.name}\nType: ${selected.type}`;
+        document.getElementById('widthInput').value = Math.round(selected.width);
+        document.getElementById('heightInput').value = Math.round(selected.height);
+      } else {
+        document.getElementById('info').textContent = 'Click a part';
+      }
+      document.getElementById('stats').textContent = `${parts.length} parts | ${joints.length} joints`;
+    }
+
+    function selectPart(i) {
+      if (rigMode) {
+        if (rigSelected.includes(parts[i])) rigSelected = rigSelected.filter(p => p !== parts[i]);
+        else {
+          rigSelected.push(parts[i]);
+          if (rigSelected.length === 2) {
+            joints.push({p1: rigSelected[0], p2: rigSelected[1]});
+            rigSelected = []; rigMode = false;
+            document.getElementById('rigBtn').className = '';
+          }
+        }
+      } else selected = parts[i];
+      updateUI(); render();
+    }
+
+    function updateSize() {
+      if (!selected) return;
+      const w = parseFloat(document.getElementById('widthInput').value);
+      const h = parseFloat(document.getElementById('heightInput').value);
+      if (w >= 50) selected.width = w;
+      if (h >= 50) selected.height = h;
+      render();
+    }
+
+    function deleteSelected() {
+      if (!selected) return;
+      parts = parts.filter(p => p !== selected);
+      joints = joints.filter(j => j.p1 !== selected && j.p2 !== selected);
+      selected = null; updateUI(); render();
+    }
+
+    function clearAll() {
+      if (confirm('Clear all?')) {
+        parts = []; joints = []; selected = null; rigMode = false;
+        rigSelected = []; recordedFrames = [];
+        updateUI(); render();
+      }
+    }
+
+    function exportCPP() {
+      let code = `#include <Servo.h>\n\n`;
+      parts.forEach((p,i) => code += `Servo s${i}; // ${p.name}\n`);
+      code += `\nvoid setup() {\n`;
+      parts.forEach((p,i) => code += `  s${i}.attach(${9+i});\n`);
+      code += `}\nvoid loop() {}\n`;
+      document.getElementById('exportOutput').value = code;
+    }
+
+    function exportMath() {
+      let m = `Parts: ${parts.length}\nJoints: ${joints.length}\n\nPositions:\n`;
+      parts.forEach((p,i) => m += `Part${i+1}: (${Math.round(p.x)},${Math.round(p.y)})\n`);
+      document.getElementById('exportOutput').value = m;
+    }
+
+    function exportJSON() {
+      const d = {
+        parts: parts.map((p,i) => ({id:i, name:p.name, type:p.type, x:p.x, y:p.y})),
+        joints: joints.map(j => ({p1:parts.indexOf(j.p1), p2:parts.indexOf(j.p2)}))
+      };
+      document.getElementById('exportOutput').value = JSON.stringify(d, null, 2);
+    }
+
+    function copyToClipboard() {
+      navigator.clipboard.writeText(document.getElementById('exportOutput').value);
+      alert('Copied!');
+    }
+
+    function downloadFile() {
+      const b = new Blob([document.getElementById('exportOutput').value], {type:'text/plain'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(b);
+      a.download = 'roboptixx.txt';
+      a.click();
+    }
+
+    function render() {
+      if (recording) {
+        recordedFrames.push({parts: parts.map(p => ({x:p.x, y:p.y}))});
+        document.getElementById('recordInfo').textContent = `Recording: ${recordedFrames.length} frames`;
+      }
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      ctx.strokeStyle = '#EEE'; ctx.lineWidth = 0.5;
+      for (let i=0; i<canvas.width; i+=50) {
+        ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,canvas.height); ctx.stroke();
+      }
+      for (let i=0; i<canvas.height; i+=50) {
+        ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(canvas.width,i); ctx.stroke();
+      }
+
+      ctx.strokeStyle = '#2E8B57'; ctx.lineWidth = 3;
+      joints.forEach(j => {
+        ctx.beginPath(); ctx.moveTo(j.p1.x, j.p1.y);
+        ctx.lineTo(j.p2.x, j.p2.y); ctx.stroke();
+      });
+
+      parts.forEach(p => p.draw(p === selected));
+
+      ctx.fillStyle = '#FFD700'; ctx.font = '12px monospace'; ctx.textAlign = 'left';
+      ctx.fillText(`Parts: ${parts.length} | Joints: ${joints.length}`, 10, 20);
+    }
+
+    let dragResize = null;
+
+    canvas.addEventListener('click', e => {
+      const r = canvas.getBoundingClientRect();
+      const x = e.clientX - r.left, y = e.clientY - r.top;
+      for (let i=parts.length-1; i>=0; i--) {
+        if (parts[i].hit(x, y)) { selectPart(i); return; }
+      }
+      if (!rigMode) { selected = null; updateUI(); render(); }
+    });
+
+    canvas.addEventListener('mousemove', e => {
+      const r = canvas.getBoundingClientRect();
+      const x = e.clientX - r.left, y = e.clientY - r.top;
+      if (dragResize && selected && !rigMode) {
+        const dx = x - dragResize.sx, dy = y - dragResize.sy;
+        selected.width = Math.max(50, dragResize.sw + dx);
+        selected.height = Math.max(50, dragResize.sh + dy);
+        render();
+      } else if (selected && !rigMode) {
+        selected.x = x; selected.y = y; render();
+      }
+    });
+
+    canvas.addEventListener('mousedown', e => {
+      if (!selected || rigMode) return;
+      const r = canvas.getBoundingClientRect();
+      const x = e.clientX - r.left, y = e.clientY - r.top;
+      const hx = selected.x + selected.width/2, hy = selected.y + selected.height/2;
+      if (Math.abs(x - hx) < 10 && Math.abs(y - hy) < 10) {
+        dragResize = {sx:x, sy:y, sw:selected.width, sh:selected.height};
+      }
+    });
+
+    canvas.addEventListener('mouseup', () => dragResize = null);
+
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth - 350;
+      canvas.height = window.innerHeight;
+      render();
+    });
+
+    setTimeout(() => {
+      canvas.width = window.innerWidth - 350;
+      canvas.height = window.innerHeight;
+      updateUI();
+      render();
+      console.log('✅ ROBOPTIXX Initialized');
+    }, 100);
+  </script>
+</body>
+</html>
