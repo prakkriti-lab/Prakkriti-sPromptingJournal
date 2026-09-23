@@ -2,20 +2,20 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>ROBOPTIXX</title>
+  <title>ROBOPTIXX - Skeleton Builder</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { width: 100%; height: 100%; background: #1a1410; font-family: monospace; overflow: hidden; }
     #main { display: flex; width: 100%; height: 100%; }
-    canvas { background: white; flex: 1; display: block; }
-    #sidebar { width: 350px; background: #1a1410; border-left: 3px solid #FF8C00; overflow-y: auto; padding: 15px; }
+    canvas { background: white; flex: 1; display: block; cursor: crosshair; }
+    #sidebar { width: 380px; background: #1a1410; border-left: 3px solid #FF8C00; overflow-y: auto; padding: 15px; }
     h2 { color: #FFD700; margin: 15px 0 8px 0; font-size: 11px; }
     button { width: 100%; padding: 8px; margin: 5px 0; background: #FF8C00; color: #1a1410; border: none; cursor: pointer; font-weight: bold; }
     button:hover { background: #FFA500; }
     button.danger { background: #DC143C; }
     button.active { background: #FF4444; }
     .mode-tabs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin: 10px 0 15px 0; }
-    .mode-tab { padding: 8px; background: #2a2015; border: 2px solid #A0522D; color: #FFE4B5; cursor: pointer; font-size: 10px; text-align: center; }
+    .mode-tab { padding: 8px; background: #2a2015; border: 2px solid #A0522D; color: #FFE4B5; cursor: pointer; font-size: 9px; text-align: center; }
     .mode-tab.active { background: #FF8C00; border-color: #FFD700; color: #1a1410; }
     .mode-content { display: none; }
     .mode-content.active { display: block; }
@@ -34,16 +34,16 @@
   <div id="main">
     <canvas id="canvas"></canvas>
     <div id="sidebar">
-      <h2>🤖 ROBOPTIXX</h2>
+      <h2>🤖 ROBOPTIXX SKELETON</h2>
       
       <div class="mode-tabs">
-        <div class="mode-tab active" onclick="switchMode('assembly')">⚙️ BUILD</div>
-        <div class="mode-tab" onclick="switchMode('rigging')">🔗 RIG</div>
-        <div class="mode-tab" onclick="switchMode('export')">💾 CODE</div>
+        <div class="mode-tab active" onclick="switchMode('parts')">📦 PARTS</div>
+        <div class="mode-tab" onclick="switchMode('skeleton')">🦴 SKELETON</div>
+        <div class="mode-tab" onclick="switchMode('export')">💾 EXPORT</div>
       </div>
       
-      <div id="assembly-mode" class="mode-content active">
-        <h2>📷 Upload Image</h2>
+      <div id="parts-mode" class="mode-content active">
+        <h2>📷 Upload Part Image</h2>
         <label class="file-input-label" onclick="document.getElementById('imageFile').click()">➕ Choose Image</label>
         <input type="file" id="imageFile" accept="image/*" onchange="uploadImage()">
         
@@ -54,37 +54,42 @@
         <select id="partType" style="width:100%; padding:5px; background:#2a2015; color:#FFD700; border:1px solid #FF8C00; margin:5px 0;">
           <option>Limb</option><option>Joint</option><option>Core</option><option>Wheel</option>
         </select>
-        <button onclick="addPart()">Add Part</button>
+        <button onclick="addPart()">Add to Canvas</button>
         
         <h2>📦 Parts</h2>
         <div id="partsList" class="info">No parts</div>
         
-        <h2>📐 Size</h2>
+        <h2>📐 Resize</h2>
         <label>Width:</label>
         <input type="number" id="widthInput" value="300" onchange="updateSize()">
         <label>Height:</label>
         <input type="number" id="heightInput" value="400" onchange="updateSize()">
-        <button class="danger" onclick="deleteSelected()">Delete</button>
+        <button class="danger" onclick="deleteSelected()">Delete Part</button>
       </div>
       
-      <div id="rigging-mode" class="mode-content">
-        <h2>🔗 Rigging</h2>
-        <button id="rigBtn" onclick="toggleRig()">Start Rig</button>
-        <div class="info" id="rigInfo">Select 2 parts</div>
+      <div id="skeleton-mode" class="mode-content">
+        <h2>🦴 Draw Skeleton</h2>
+        <div class="info">✏️ Click on part to select → Click inside to add joints</div>
         
-        <h2>📌 Joints</h2>
-        <div id="jointsList" class="info">No joints</div>
+        <button id="drawBtn" onclick="toggleDrawSkeleton()">Start Drawing</button>
+        <div class="info" id="drawInfo">Select a part first</div>
         
-        <h2>🎬 Record</h2>
-        <button id="recordBtn" onclick="toggleRecord()">🔴 Record</button>
-        <div class="info" id="recordInfo">Not recording</div>
+        <h2>📌 Joint Points</h2>
+        <div id="skeletonList" class="info">No joints marked</div>
+        
+        <h2>🔗 Connect Joints</h2>
+        <button id="connectBtn" onclick="toggleConnectMode()">Connect Mode</button>
+        <div class="info" id="connectInfo">Click 2 joints to connect</div>
+        
+        <h2>Connections</h2>
+        <div id="connectionsList" class="info">No connections</div>
+        
+        <button class="danger" onclick="clearSkeleton()">Clear Skeleton</button>
       </div>
       
       <div id="export-mode" class="mode-content">
         <h2>💾 Export</h2>
-        <button onclick="exportCPP()">Arduino C++</button>
-        <button onclick="exportMath()">Kinematics</button>
-        <button onclick="exportJSON()">JSON</button>
+        <button onclick="exportJSON()">Export Skeleton JSON</button>
         
         <h2>Output</h2>
         <textarea id="exportOutput" readonly></textarea>
@@ -103,52 +108,83 @@
   <script>
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
-    let parts = [], joints = [], selected = null, uploadedImage = null;
-    let rigMode = false, rigSelected = [], recording = false, recordedFrames = [];
+    let parts = [], selected = null, uploadedImage = null;
+    let drawMode = false, connectMode = false;
+    let selectedSkeletonJoints = [];
 
     class Part {
       constructor(x, y, name, type, img) {
         this.x = x; this.y = y; this.name = name; this.type = type;
         this.width = 300; this.height = 400; this.image = img;
+        this.skeletonJoints = [];
+        this.skeletonConnections = [];
       }
+      
       draw(sel) {
         ctx.save(); ctx.translate(this.x, this.y);
+        
         if (this.image) ctx.drawImage(this.image, -this.width/2, -this.height/2, this.width, this.height);
         else {
           ctx.fillStyle = sel ? '#FF4444' : '#FF7F50';
           ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height);
         }
+        
         ctx.strokeStyle = sel ? '#FFD700' : '#FF8C00';
         ctx.lineWidth = 3;
         ctx.strokeRect(-this.width/2, -this.height/2, this.width, this.height);
-        if (!this.image && !sel) {
-          ctx.fillStyle = '#1a1410'; ctx.font = 'bold 14px monospace';
-          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-          ctx.fillText(this.name, 0, 0);
-        }
-        if (sel) {
+        
+        // Draw bones (connections)
+        ctx.strokeStyle = '#2E8B57';
+        ctx.lineWidth = 3;
+        this.skeletonConnections.forEach(conn => {
+          const j1 = this.skeletonJoints[conn.j1];
+          const j2 = this.skeletonJoints[conn.j2];
+          if (j1 && j2) {
+            ctx.beginPath();
+            ctx.moveTo(j1.x, j1.y);
+            ctx.lineTo(j2.x, j2.y);
+            ctx.stroke();
+          }
+        });
+        
+        // Draw joints (points)
+        this.skeletonJoints.forEach((joint, i) => {
+          ctx.fillStyle = joint.selected ? '#FFD700' : '#00FF00';
+          ctx.fillRect(joint.x - 6, joint.y - 6, 12, 12);
+          ctx.strokeStyle = '#1a1410';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(joint.x - 6, joint.y - 6, 12, 12);
+          
           ctx.fillStyle = '#FFD700';
-          ctx.fillRect(this.width/2-8, this.height/2-8, 16, 16);
-          ctx.font = 'bold 10px monospace'; ctx.textAlign = 'center';
-          ctx.fillText(`${Math.round(this.width)}x${Math.round(this.height)}`, 0, -this.height/2-15);
-        }
-        if (rigSelected.includes(this)) {
-          ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 2; ctx.setLineDash([5,5]);
-          ctx.strokeRect(-this.width/2-5, -this.height/2-5, this.width+10, this.height+10);
-          ctx.setLineDash([]);
-        }
+          ctx.font = '8px monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText(`J${i}`, joint.x, joint.y + 12);
+        });
+        
         ctx.restore();
       }
+      
       hit(x, y) {
-        return Math.abs(x-this.x) < this.width/2 && Math.abs(y-this.y) < this.height/2;
+        return Math.abs(x - this.x) < this.width/2 && Math.abs(y - this.y) < this.height/2;
+      }
+      
+      hitJoint(x, y) {
+        const relX = x - this.x;
+        const relY = y - this.y;
+        for (let i = 0; i < this.skeletonJoints.length; i++) {
+          const j = this.skeletonJoints[i];
+          if (Math.abs(relX - j.x) < 8 && Math.abs(relY - j.y) < 8) return i;
+        }
+        return -1;
       }
     }
 
     function switchMode(m) {
       document.querySelectorAll('.mode-content').forEach(e => e.classList.remove('active'));
       document.querySelectorAll('.mode-tab').forEach(e => e.classList.remove('active'));
-      document.getElementById(m+'-mode').classList.add('active');
+      document.getElementById(m + '-mode').classList.add('active');
       event.target.classList.add('active');
+      drawMode = false; connectMode = false;
       render();
     }
 
@@ -172,58 +208,46 @@
       parts.push(p); selected = p; updateUI(); render();
     }
 
-    function toggleRig() {
-      rigMode = !rigMode; rigSelected = [];
-      document.getElementById('rigBtn').className = rigMode ? 'active' : '';
+    function toggleDrawSkeleton() {
+      if (!selected) { alert('Select a part first'); return; }
+      drawMode = !drawMode;
+      document.getElementById('drawBtn').className = drawMode ? 'active' : '';
       updateUI(); render();
     }
 
-    function toggleRecord() {
-      recording = !recording;
-      if (recording) {
-        recordedFrames = [];
-        document.getElementById('recordBtn').textContent = '⏹️ Stop';
-        document.getElementById('recordInfo').textContent = 'Recording: 0 frames';
-      } else {
-        document.getElementById('recordBtn').textContent = '🔴 Record';
-        document.getElementById('recordInfo').textContent = `Recorded: ${recordedFrames.length} frames`;
-      }
+    function toggleConnectMode() {
+      if (!selected) { alert('Select a part first'); return; }
+      connectMode = !connectMode;
+      selectedSkeletonJoints = [];
+      document.getElementById('connectBtn').className = connectMode ? 'active' : '';
+      updateUI(); render();
     }
 
     function updateUI() {
       let h = ''; parts.forEach((p,i) => {
-        h += `<div class="part-box${p===selected?' selected':''}" onclick="selectPart(${i})">${i+1}. ${p.name}</div>`;
+        h += `<div class="part-box${p===selected?' selected':''}" onclick="selectPart(${i})">${i+1}. ${p.name} (${p.skeletonJoints.length} joints)</div>`;
       });
       document.getElementById('partsList').innerHTML = h || 'No parts';
       
-      h = ''; joints.forEach((j,i) => {
-        const p1 = parts.indexOf(j.p1), p2 = parts.indexOf(j.p2);
-        h += `<div class="joint-box">Joint ${i+1}: Part${p1+1}↔Part${p2+1}</div>`;
-      });
-      document.getElementById('jointsList').innerHTML = h || 'No joints';
-      
       if (selected) {
-        document.getElementById('info').textContent = `${selected.name}\nType: ${selected.type}`;
-        document.getElementById('widthInput').value = Math.round(selected.width);
-        document.getElementById('heightInput').value = Math.round(selected.height);
-      } else {
-        document.getElementById('info').textContent = 'Click a part';
+        let jh = ''; selected.skeletonJoints.forEach((j,i) => {
+          jh += `<div class="joint-box">J${i}: (${Math.round(j.x)},${Math.round(j.y)})</div>`;
+        });
+        document.getElementById('skeletonList').innerHTML = jh || 'No joints';
+        
+        let ch = ''; selected.skeletonConnections.forEach((c,i) => {
+          ch += `<div class="joint-box">Conn${i}: J${c.j1}↔J${c.j2}</div>`;
+        });
+        document.getElementById('connectionsList').innerHTML = ch || 'No connections';
+        
+        document.getElementById('info').textContent = `${selected.name}\n${selected.skeletonJoints.length} joints`;
       }
-      document.getElementById('stats').textContent = `${parts.length} parts | ${joints.length} joints`;
+      document.getElementById('stats').textContent = `${parts.length} parts`;
     }
 
     function selectPart(i) {
-      if (rigMode) {
-        if (rigSelected.includes(parts[i])) rigSelected = rigSelected.filter(p => p !== parts[i]);
-        else {
-          rigSelected.push(parts[i]);
-          if (rigSelected.length === 2) {
-            joints.push({p1: rigSelected[0], p2: rigSelected[1]});
-            rigSelected = []; rigMode = false;
-            document.getElementById('rigBtn').className = '';
-          }
-        }
-      } else selected = parts[i];
+      selected = parts[i];
+      drawMode = false; connectMode = false;
       updateUI(); render();
     }
 
@@ -239,37 +263,36 @@
     function deleteSelected() {
       if (!selected) return;
       parts = parts.filter(p => p !== selected);
-      joints = joints.filter(j => j.p1 !== selected && j.p2 !== selected);
       selected = null; updateUI(); render();
+    }
+
+    function clearSkeleton() {
+      if (!selected) return;
+      selected.skeletonJoints = [];
+      selected.skeletonConnections = [];
+      updateUI(); render();
     }
 
     function clearAll() {
       if (confirm('Clear all?')) {
-        parts = []; joints = []; selected = null; rigMode = false;
-        rigSelected = []; recordedFrames = [];
+        parts = []; selected = null; drawMode = false; connectMode = false;
         updateUI(); render();
       }
     }
 
-    function exportCPP() {
-      let code = `#include <Servo.h>\n\n`;
-      parts.forEach((p,i) => code += `Servo s${i}; // ${p.name}\n`);
-      code += `\nvoid setup() {\n`;
-      parts.forEach((p,i) => code += `  s${i}.attach(${9+i});\n`);
-      code += `}\nvoid loop() {}\n`;
-      document.getElementById('exportOutput').value = code;
-    }
-
-    function exportMath() {
-      let m = `Parts: ${parts.length}\nJoints: ${joints.length}\n\nPositions:\n`;
-      parts.forEach((p,i) => m += `Part${i+1}: (${Math.round(p.x)},${Math.round(p.y)})\n`);
-      document.getElementById('exportOutput').value = m;
-    }
-
     function exportJSON() {
       const d = {
-        parts: parts.map((p,i) => ({id:i, name:p.name, type:p.type, x:p.x, y:p.y})),
-        joints: joints.map(j => ({p1:parts.indexOf(j.p1), p2:parts.indexOf(j.p2)}))
+        parts: parts.map((p,i) => ({
+          id: i,
+          name: p.name,
+          type: p.type,
+          x: p.x,
+          y: p.y,
+          width: p.width,
+          height: p.height,
+          skeletonJoints: p.skeletonJoints.map((j,idx) => ({id: idx, x: j.x, y: j.y})),
+          skeletonConnections: p.skeletonConnections
+        }))
       };
       document.getElementById('exportOutput').value = JSON.stringify(d, null, 2);
     }
@@ -283,16 +306,11 @@
       const b = new Blob([document.getElementById('exportOutput').value], {type:'text/plain'});
       const a = document.createElement('a');
       a.href = URL.createObjectURL(b);
-      a.download = 'roboptixx.txt';
+      a.download = 'roboptixx-skeleton.json';
       a.click();
     }
 
     function render() {
-      if (recording) {
-        recordedFrames.push({parts: parts.map(p => ({x:p.x, y:p.y}))});
-        document.getElementById('recordInfo').textContent = `Recording: ${recordedFrames.length} frames`;
-      }
-
       ctx.fillStyle = '#FFFFFF';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
@@ -304,66 +322,62 @@
         ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(canvas.width,i); ctx.stroke();
       }
 
-      ctx.strokeStyle = '#2E8B57'; ctx.lineWidth = 3;
-      joints.forEach(j => {
-        ctx.beginPath(); ctx.moveTo(j.p1.x, j.p1.y);
-        ctx.lineTo(j.p2.x, j.p2.y); ctx.stroke();
-      });
-
       parts.forEach(p => p.draw(p === selected));
 
       ctx.fillStyle = '#FFD700'; ctx.font = '12px monospace'; ctx.textAlign = 'left';
-      ctx.fillText(`Parts: ${parts.length} | Joints: ${joints.length}`, 10, 20);
+      if (drawMode) ctx.fillText('DRAW MODE: Click inside part to add joints', 10, 20);
+      if (connectMode) ctx.fillText('CONNECT MODE: Click 2 joints to connect', 10, 20);
+      ctx.fillText(`Parts: ${parts.length}`, 10, 40);
     }
-
-    let dragResize = null;
 
     canvas.addEventListener('click', e => {
       const r = canvas.getBoundingClientRect();
       const x = e.clientX - r.left, y = e.clientY - r.top;
-      for (let i=parts.length-1; i>=0; i--) {
+      
+      if (drawMode && selected) {
+        const relX = x - selected.x;
+        const relY = y - selected.y;
+        if (Math.abs(relX) < selected.width/2 && Math.abs(relY) < selected.height/2) {
+          selected.skeletonJoints.push({x: relX, y: relY, selected: false});
+          updateUI(); render();
+          return;
+        }
+      }
+      
+      if (connectMode && selected) {
+        const jointIdx = selected.hitJoint(x, y);
+        if (jointIdx !== -1) {
+          selected.skeletonJoints[jointIdx].selected = !selected.skeletonJoints[jointIdx].selected;
+          selectedSkeletonJoints = selected.skeletonJoints.filter(j => j.selected).map((j,i) => selected.skeletonJoints.indexOf(j));
+          
+          if (selectedSkeletonJoints.length === 2) {
+            selected.skeletonConnections.push({j1: selectedSkeletonJoints[0], j2: selectedSkeletonJoints[1]});
+            selected.skeletonJoints.forEach(j => j.selected = false);
+            selectedSkeletonJoints = [];
+          }
+          updateUI(); render();
+          return;
+        }
+      }
+      
+      for (let i = parts.length-1; i >= 0; i--) {
         if (parts[i].hit(x, y)) { selectPart(i); return; }
       }
-      if (!rigMode) { selected = null; updateUI(); render(); }
+      selected = null; updateUI(); render();
     });
-
-    canvas.addEventListener('mousemove', e => {
-      const r = canvas.getBoundingClientRect();
-      const x = e.clientX - r.left, y = e.clientY - r.top;
-      if (dragResize && selected && !rigMode) {
-        const dx = x - dragResize.sx, dy = y - dragResize.sy;
-        selected.width = Math.max(50, dragResize.sw + dx);
-        selected.height = Math.max(50, dragResize.sh + dy);
-        render();
-      } else if (selected && !rigMode) {
-        selected.x = x; selected.y = y; render();
-      }
-    });
-
-    canvas.addEventListener('mousedown', e => {
-      if (!selected || rigMode) return;
-      const r = canvas.getBoundingClientRect();
-      const x = e.clientX - r.left, y = e.clientY - r.top;
-      const hx = selected.x + selected.width/2, hy = selected.y + selected.height/2;
-      if (Math.abs(x - hx) < 10 && Math.abs(y - hy) < 10) {
-        dragResize = {sx:x, sy:y, sw:selected.width, sh:selected.height};
-      }
-    });
-
-    canvas.addEventListener('mouseup', () => dragResize = null);
 
     window.addEventListener('resize', () => {
-      canvas.width = window.innerWidth - 350;
+      canvas.width = window.innerWidth - 380;
       canvas.height = window.innerHeight;
       render();
     });
 
     setTimeout(() => {
-      canvas.width = window.innerWidth - 350;
+      canvas.width = window.innerWidth - 380;
       canvas.height = window.innerHeight;
       updateUI();
       render();
-      console.log('✅ ROBOPTIXX Initialized');
+      console.log('✅ ROBOPTIXX Skeleton Builder Ready');
     }, 100);
   </script>
 </body>
