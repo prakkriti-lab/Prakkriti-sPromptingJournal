@@ -36,19 +36,19 @@
     <canvas id="canvas"></canvas>
     <div id="sidebar">
       <h2>🤖 ROBOPTIXX SKELETON</h2>
-      
+
       <div class="mode-tabs">
-        <div class="mode-tab active" onclick="switchMode('parts')">📦 PARTS</div>
-        <div class="mode-tab" onclick="switchMode('skeleton')">🦴 SKELETON</div>
-        <div class="mode-tab" onclick="switchMode('animate')">🎬 ANIMATE</div>
-        <div class="mode-tab" onclick="switchMode('export')">💾 EXPORT</div>
+        <div class="mode-tab active" onclick="switchMode('parts', this)">📦 PARTS</div>
+        <div class="mode-tab" onclick="switchMode('skeleton', this)">🦴 SKELETON</div>
+        <div class="mode-tab" onclick="switchMode('animate', this)">🎬 ANIMATE</div>
+        <div class="mode-tab" onclick="switchMode('export', this)">💾 EXPORT</div>
       </div>
-      
+
       <div id="parts-mode" class="mode-content active">
         <h2>📷 Upload Part Image</h2>
         <label class="file-input-label" onclick="document.getElementById('imageFile').click()">➕ Choose Image</label>
         <input type="file" id="imageFile" accept="image/*" onchange="uploadImage()">
-        
+
         <h2>📋 Part Info</h2>
         <label>Name:</label>
         <input type="text" id="partName" placeholder="e.g. Limb_1">
@@ -57,35 +57,42 @@
           <option>Limb</option><option>Joint</option><option>Core</option><option>Wheel</option>
         </select>
         <button onclick="addPart()">Add to Canvas</button>
-        
+
         <h2>📦 Parts</h2>
         <div id="partsList" class="info">No parts</div>
-        
+
         <h2>📐 Resize</h2>
         <label>Width:</label>
         <input type="number" id="widthInput" value="300" onchange="updateSize()">
         <label>Height:</label>
         <input type="number" id="heightInput" value="400" onchange="updateSize()">
+
+        <h2>🔒 Position Lock</h2>
+        <button id="lockBtn" onclick="toggleLock()">🔓 Unlock (Click to Lock)</button>
+
         <button class="danger" onclick="deleteSelected()">Delete Part</button>
       </div>
-      
+
       <div id="skeleton-mode" class="mode-content">
         <h2>🦴 Draw Skeleton</h2>
         <div class="info">✏️ Click on part to select → Click inside to add joints</div>
-        
+
         <button id="drawBtn" onclick="toggleDrawSkeleton()">Start Drawing</button>
         <div class="info" id="drawInfo">Select a part first</div>
-        
+
         <h2>📌 Joint Points</h2>
         <div id="skeletonList" class="info">No joints marked</div>
-        
+
         <h2>🔗 Connect Joints</h2>
         <button id="connectBtn" onclick="toggleConnectMode()">Connect Mode</button>
         <div class="info" id="connectInfo">Click 2 joints to connect</div>
-        
+
         <h2>Connections</h2>
         <div id="connectionsList" class="info">No connections</div>
-        
+
+        <h2>🎯 Joint Edit</h2>
+        <div class="info">Drag joints to reposition them</div>
+
         <button class="danger" onclick="clearSkeleton()">Clear Skeleton</button>
       </div>
 
@@ -93,27 +100,27 @@
         <h2>🎬 Animation</h2>
         <button onclick="recordFrame()">⏺️ Record Frame</button>
         <div class="info" id="frameInfo">Frames: 0</div>
-        
+
         <h2>▶️ Playback</h2>
         <button id="playBtn" onclick="playAnimation()">▶️ Play</button>
         <button class="danger" onclick="stopAnimation()">⏹️ Stop</button>
-        
+
         <h2>📊 Timeline</h2>
         <input type="range" id="timeline" min="0" max="0" value="0" onchange="scrubTimeline()">
         <div class="info" id="timelineInfo">Frame: 0/0</div>
       </div>
-      
+
       <div id="export-mode" class="mode-content">
         <h2>💾 Export</h2>
         <button onclick="exportJSON()">Export Skeleton JSON</button>
-        
+
         <h2>Output</h2>
         <textarea id="exportOutput" readonly></textarea>
-        
+
         <button onclick="copyToClipboard()">Copy</button>
         <button onclick="downloadFile()">Download</button>
       </div>
-      
+
       <h2>ℹ️ Info</h2>
       <div id="info" class="info">Click a part</div>
       <div id="stats" class="info">0 parts</div>
@@ -139,21 +146,29 @@
         this.width = 300; this.height = 400; this.image = img;
         this.skeletonJoints = [];
         this.skeletonConnections = [];
+        this.locked = false;
       }
-      
+
       draw(sel) {
         ctx.save(); ctx.translate(this.x, this.y);
-        
+
         if (this.image) ctx.drawImage(this.image, -this.width/2, -this.height/2, this.width, this.height);
         else {
           ctx.fillStyle = sel ? '#FF4444' : '#FF7F50';
           ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height);
         }
-        
-        ctx.strokeStyle = sel ? '#FFD700' : '#FF8C00';
+
+        ctx.strokeStyle = this.locked ? '#DC143C' : (sel ? '#FFD700' : '#FF8C00');
         ctx.lineWidth = 3;
         ctx.strokeRect(-this.width/2, -this.height/2, this.width, this.height);
-        
+
+        if (this.locked) {
+          ctx.fillStyle = '#DC143C';
+          ctx.font = 'bold 14px monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText('🔒 LOCKED', 0, -this.height/2 - 10);
+        }
+
         ctx.strokeStyle = '#2E8B57';
         ctx.lineWidth = 3;
         this.skeletonConnections.forEach(conn => {
@@ -166,27 +181,27 @@
             ctx.stroke();
           }
         });
-        
+
         this.skeletonJoints.forEach((joint, i) => {
           ctx.fillStyle = joint.selected ? '#FFD700' : '#00FF00';
           ctx.fillRect(joint.x - 6, joint.y - 6, 12, 12);
           ctx.strokeStyle = '#1a1410';
           ctx.lineWidth = 1;
           ctx.strokeRect(joint.x - 6, joint.y - 6, 12, 12);
-          
+
           ctx.fillStyle = '#FFD700';
           ctx.font = '8px monospace';
           ctx.textAlign = 'center';
           ctx.fillText(`J${i}`, joint.x, joint.y + 12);
         });
-        
+
         ctx.restore();
       }
-      
+
       hit(x, y) {
         return Math.abs(x - this.x) < this.width/2 && Math.abs(y - this.y) < this.height/2;
       }
-      
+
       hitJoint(x, y) {
         const relX = x - this.x;
         const relY = y - this.y;
@@ -198,11 +213,11 @@
       }
     }
 
-    function switchMode(m) {
+    function switchMode(m, tabEl) {
       document.querySelectorAll('.mode-content').forEach(e => e.classList.remove('active'));
       document.querySelectorAll('.mode-tab').forEach(e => e.classList.remove('active'));
       document.getElementById(m + '-mode').classList.add('active');
-      event.target.classList.add('active');
+      if (tabEl) tabEl.classList.add('active');
       drawMode = false; connectMode = false;
       render();
     }
@@ -221,8 +236,8 @@
 
     function addPart() {
       if (!uploadedImage) { alert('Upload image'); return; }
-      const p = new Part(canvas.width/3 + Math.random()*150, 100+parts.length*100,
-        document.getElementById('partName').value || 'Part_'+parts.length,
+      const p = new Part(canvas.width/3 + Math.random()*150, 100 + parts.length*100,
+        document.getElementById('partName').value || 'Part_' + parts.length,
         document.getElementById('partType').value, uploadedImage);
       parts.push(p); selected = p; updateUI(); render();
     }
@@ -230,22 +245,45 @@
     function toggleDrawSkeleton() {
       if (!selected) { alert('Select a part first'); return; }
       drawMode = !drawMode;
+      connectMode = false;
       document.getElementById('drawBtn').className = drawMode ? 'active' : '';
+      document.getElementById('connectBtn').className = '';
       updateUI(); render();
     }
 
     function toggleConnectMode() {
       if (!selected) { alert('Select a part first'); return; }
       connectMode = !connectMode;
+      drawMode = false;
       selectedSkeletonJoints = [];
+      selected.skeletonJoints.forEach(j => j.selected = false);
       document.getElementById('connectBtn').className = connectMode ? 'active' : '';
+      document.getElementById('drawBtn').className = '';
       updateUI(); render();
     }
 
+    function snapshotPose() {
+      return parts.map(p => ({
+        part: p, x: p.x, y: p.y,
+        joints: p.skeletonJoints.map(j => ({x: j.x, y: j.y}))
+      }));
+    }
+
+    function applyPose(pose) {
+      pose.forEach(e => {
+        e.part.x = e.x; e.part.y = e.y;
+        e.joints.forEach((jp, i) => {
+          if (e.part.skeletonJoints[i]) {
+            e.part.skeletonJoints[i].x = jp.x;
+            e.part.skeletonJoints[i].y = jp.y;
+          }
+        });
+      });
+    }
+
     function recordFrame() {
-      if (!selected) { alert('Select a part'); return; }
-      const f = selected.skeletonJoints.map(j => ({x: j.x, y: j.y}));
-      recordedFrames.push(f);
+      if (parts.length === 0) { alert('Pehle part add karo'); return; }
+      recordedFrames.push(snapshotPose());
       document.getElementById('frameInfo').textContent = `Frames: ${recordedFrames.length}`;
       document.getElementById('timeline').max = Math.max(recordedFrames.length - 1, 0);
     }
@@ -258,10 +296,9 @@
     }
 
     function animateLoop() {
-      if (!isPlaying || !selected) return;
+      if (!isPlaying || recordedFrames.length === 0) return;
       currentFrameIndex = (currentFrameIndex + 1) % recordedFrames.length;
-      const f = recordedFrames[currentFrameIndex];
-      selected.skeletonJoints.forEach((j, i) => { if (f[i]) { j.x = f[i].x; j.y = f[i].y; } });
+      applyPose(recordedFrames[currentFrameIndex]);
       document.getElementById('timeline').value = currentFrameIndex;
       document.getElementById('timelineInfo').textContent = `Frame: ${currentFrameIndex + 1}/${recordedFrames.length}`;
       render();
@@ -276,30 +313,42 @@
     function scrubTimeline() {
       if (recordedFrames.length === 0) return;
       currentFrameIndex = parseInt(document.getElementById('timeline').value);
-      const f = recordedFrames[currentFrameIndex];
-      if (selected) selected.skeletonJoints.forEach((j, i) => { if (f[i]) { j.x = f[i].x; j.y = f[i].y; } });
+      applyPose(recordedFrames[currentFrameIndex]);
       document.getElementById('timelineInfo').textContent = `Frame: ${currentFrameIndex + 1}/${recordedFrames.length}`;
       render();
     }
 
     function updateUI() {
-      let h = ''; parts.forEach((p,i) => {
-        h += `<div class="part-box${p===selected?' selected':''}" onclick="selectPart(${i})">${i+1}. ${p.name} (${p.skeletonJoints.length} joints)</div>`;
+      let h = '';
+      parts.forEach((p, i) => {
+        const lockIcon = p.locked ? '🔒' : '🔓';
+        h += `<div class="part-box${p === selected ? ' selected' : ''}" onclick="selectPart(${i})">${i+1}. ${p.name} ${lockIcon} (${p.skeletonJoints.length}J)</div>`;
       });
       document.getElementById('partsList').innerHTML = h || 'No parts';
-      
+
       if (selected) {
-        let jh = ''; selected.skeletonJoints.forEach((j,i) => {
+        let jh = '';
+        selected.skeletonJoints.forEach((j, i) => {
           jh += `<div class="joint-box">J${i}: (${Math.round(j.x)},${Math.round(j.y)})</div>`;
         });
         document.getElementById('skeletonList').innerHTML = jh || 'No joints';
-        
-        let ch = ''; selected.skeletonConnections.forEach((c,i) => {
+
+        let ch = '';
+        selected.skeletonConnections.forEach((c, i) => {
           ch += `<div class="joint-box">Conn${i}: J${c.j1}↔J${c.j2}</div>`;
         });
         document.getElementById('connectionsList').innerHTML = ch || 'No connections';
-        
+
         document.getElementById('info').textContent = `${selected.name}\n${selected.skeletonJoints.length} joints`;
+
+        const lockBtn = document.getElementById('lockBtn');
+        if (selected.locked) {
+          lockBtn.textContent = '🔒 Locked (Click to Unlock)';
+          lockBtn.style.background = '#DC143C';
+        } else {
+          lockBtn.textContent = '🔓 Unlocked (Click to Lock)';
+          lockBtn.style.background = '#FF8C00';
+        }
       }
       document.getElementById('stats').textContent = `${parts.length} parts`;
     }
@@ -307,6 +356,8 @@
     function selectPart(i) {
       selected = parts[i];
       drawMode = false; connectMode = false;
+      document.getElementById('drawBtn').className = '';
+      document.getElementById('connectBtn').className = '';
       updateUI(); render();
     }
 
@@ -317,6 +368,12 @@
       if (w >= 50) selected.width = w;
       if (h >= 50) selected.height = h;
       render();
+    }
+
+    function toggleLock() {
+      if (!selected) { alert('Select a part first'); return; }
+      selected.locked = !selected.locked;
+      updateUI(); render();
     }
 
     function deleteSelected() {
@@ -335,13 +392,16 @@
     function clearAll() {
       if (confirm('Clear all?')) {
         parts = []; selected = null; drawMode = false; connectMode = false;
+        recordedFrames = []; currentFrameIndex = 0; isPlaying = false;
+        document.getElementById('frameInfo').textContent = 'Frames: 0';
+        document.getElementById('timeline').max = 0;
         updateUI(); render();
       }
     }
 
     function exportJSON() {
       const d = {
-        parts: parts.map((p,i) => ({
+        parts: parts.map((p, i) => ({
           id: i,
           name: p.name,
           type: p.type,
@@ -349,7 +409,8 @@
           y: p.y,
           width: p.width,
           height: p.height,
-          skeletonJoints: p.skeletonJoints.map((j,idx) => ({id: idx, x: j.x, y: j.y})),
+          locked: p.locked,
+          skeletonJoints: p.skeletonJoints.map((j, idx) => ({id: idx, x: j.x, y: j.y})),
           skeletonConnections: p.skeletonConnections
         }))
       };
@@ -362,7 +423,7 @@
     }
 
     function downloadFile() {
-      const b = new Blob([document.getElementById('exportOutput').value], {type:'text/plain'});
+      const b = new Blob([document.getElementById('exportOutput').value], {type: 'text/plain'});
       const a = document.createElement('a');
       a.href = URL.createObjectURL(b);
       a.download = 'roboptixx-skeleton.json';
@@ -372,13 +433,13 @@
     function render() {
       ctx.fillStyle = '#FFFFFF';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
+
       ctx.strokeStyle = '#EEE'; ctx.lineWidth = 0.5;
-      for (let i=0; i<canvas.width; i+=50) {
-        ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,canvas.height); ctx.stroke();
+      for (let i = 0; i < canvas.width; i += 50) {
+        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
       }
-      for (let i=0; i<canvas.height; i+=50) {
-        ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(canvas.width,i); ctx.stroke();
+      for (let i = 0; i < canvas.height; i += 50) {
+        ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
       }
 
       parts.forEach(p => p.draw(p === selected));
@@ -392,11 +453,24 @@
     canvas.addEventListener('mousedown', e => {
       const r = canvas.getBoundingClientRect();
       const x = e.clientX - r.left, y = e.clientY - r.top;
-      
+
       if (drawMode || connectMode) return;
-      
-      for (let i = parts.length-1; i >= 0; i--) {
+
+      if (selected) {
+        const jIdx = selected.hitJoint(x, y);
+        if (jIdx !== -1) {
+          draggedJoint = {
+            idx: jIdx,
+            ox: x - (selected.x + selected.skeletonJoints[jIdx].x),
+            oy: y - (selected.y + selected.skeletonJoints[jIdx].y)
+          };
+          return;
+        }
+      }
+
+      for (let i = parts.length - 1; i >= 0; i--) {
         if (parts[i].hit(x, y)) {
+          if (parts[i].locked) { selectPart(i); return; }
           dragging = true;
           dragOffsetX = x - parts[i].x;
           dragOffsetY = y - parts[i].y;
@@ -407,9 +481,18 @@
     });
 
     canvas.addEventListener('mousemove', e => {
-      if (!dragging || !selected) return;
       const r = canvas.getBoundingClientRect();
       const x = e.clientX - r.left, y = e.clientY - r.top;
+
+      if (draggedJoint && selected) {
+        const j = selected.skeletonJoints[draggedJoint.idx];
+        j.x = x - selected.x - draggedJoint.ox;
+        j.y = y - selected.y - draggedJoint.oy;
+        updateUI(); render();
+        return;
+      }
+
+      if (!dragging || !selected) return;
       selected.x = x - dragOffsetX;
       selected.y = y - dragOffsetY;
       render();
@@ -423,7 +506,7 @@
     canvas.addEventListener('click', e => {
       const r = canvas.getBoundingClientRect();
       const x = e.clientX - r.left, y = e.clientY - r.top;
-      
+
       if (drawMode && selected) {
         const relX = x - selected.x;
         const relY = y - selected.y;
@@ -433,13 +516,14 @@
           return;
         }
       }
-      
+
       if (connectMode && selected) {
         const jointIdx = selected.hitJoint(x, y);
         if (jointIdx !== -1) {
           selected.skeletonJoints[jointIdx].selected = !selected.skeletonJoints[jointIdx].selected;
-          selectedSkeletonJoints = selected.skeletonJoints.filter(j => j.selected).map((j,i) => selected.skeletonJoints.indexOf(j));
-          
+          selectedSkeletonJoints = [];
+          selected.skeletonJoints.forEach((j, idx) => { if (j.selected) selectedSkeletonJoints.push(idx); });
+
           if (selectedSkeletonJoints.length === 2) {
             selected.skeletonConnections.push({j1: selectedSkeletonJoints[0], j2: selectedSkeletonJoints[1]});
             selected.skeletonJoints.forEach(j => j.selected = false);
@@ -449,8 +533,8 @@
           return;
         }
       }
-      
-      for (let i = parts.length-1; i >= 0; i--) {
+
+      for (let i = parts.length - 1; i >= 0; i--) {
         if (parts[i].hit(x, y)) { selectPart(i); return; }
       }
       selected = null; updateUI(); render();
